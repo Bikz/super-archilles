@@ -1,0 +1,860 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Super Archilles Debrief</title>
+<link rel="stylesheet" href="/static/theme.css">
+<style>
+  * { box-sizing: border-box; }
+  body { overflow-x: hidden; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 15px/1.45 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
+  header { display: flex; align-items: center; gap: 14px; padding: 14px 24px; border-bottom: 1px solid var(--line);
+           flex-wrap: wrap; }
+  header h1 { font-size: 18px; margin: 0; letter-spacing: .02em; }
+  header h1 span { color: var(--dim); font-weight: 500; }
+  .badge { font-size: 12px; padding: 3px 9px; border-radius: 99px; border: 1px solid var(--line); color: var(--dim); }
+  .badge.local { color: var(--green); border-color: var(--c-accent-line); }
+  .picker { margin-left: auto; display: flex; gap: 8px; align-items: center; min-width: 0; flex: 0 1 460px; }
+  select { background: var(--c-surface); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 9px 10px;
+           font: inherit; font-size: 14px; min-width: 0; width: 100%; }
+  a { color: var(--blue); }
+  main { padding: 20px 24px 60px; display: grid; gap: 18px; max-width: 1480px; margin: 0 auto; }
+  main > *, .pair > * { min-width: 0; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+  .label { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--dim); margin-bottom: 10px;
+           display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+  .label .aside { margin-left: auto; text-transform: none; letter-spacing: 0; font-size: 12px; }
+  .note { color: var(--dim); font-size: 13px; }
+  .hidden { display: none !important; }
+  button { background: var(--green); color: var(--c-on-accent); border: 0; border-radius: 8px; padding: 10px 18px;
+           font-weight: 700; font-size: 14px; cursor: pointer; font-family: inherit; }
+  button.ghost { background: transparent; color: var(--text); border: 1px solid var(--line); }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  .num { font-variant-numeric: tabular-nums; }
+  .pos { color: var(--amber); } .neg { color: var(--blue); } .bad { color: var(--red); } .good { color: var(--green); }
+  .mustb { color: var(--amber); border: 1px solid #5a3f0c; border-radius: 99px; padding: 0 6px; font-size: 10px;
+           text-transform: uppercase; letter-spacing: .06em; flex: none; font-weight: 600; }
+  .title-line { font-size: 22px; font-weight: 700; overflow-wrap: anywhere; }
+  .sub-line { color: var(--dim); font-size: 13px; overflow-wrap: anywhere; }
+
+  /* zone 1: three numbers */
+  .three { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+  .stat { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; min-width: 0; }
+  .stat .big { font-size: 46px; font-weight: 800; line-height: 1.05; font-variant-numeric: tabular-nums;
+               overflow-wrap: anywhere; }
+  .stat .big small { font-size: 22px; color: var(--dim); font-weight: 600; }
+  .stat .delta { font-size: 20px; font-weight: 700; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .stat .detail { color: var(--dim); font-size: 13px; margin-top: 6px; overflow-wrap: anywhere; }
+  .vs { display: inline-block; margin-top: 8px; font-size: 12px; color: var(--dim); border: 1px solid var(--line);
+        border-radius: 99px; padding: 2px 9px; font-variant-numeric: tabular-nums; }
+
+  /* zone 2: coverage map; same visual language as coverage.css (live heatmap) */
+  #coverage.cv { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px;
+                 min-width: 0; display: grid; gap: 10px; }
+  #coverage .cv-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  #coverage .cv-label { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--dim); }
+  #coverage .cv-tally { margin-left: auto; color: var(--dim); font-size: 13px; font-variant-numeric: tabular-nums; }
+  #coverage .cv-summary { font-size: 17px; font-weight: 700; line-height: 1.3; overflow-wrap: anywhere; color: var(--text); }
+  #coverage .cv-summary:empty, #coverage .cv-summary.gap { display: none; }  /* red outlines already show what was missed */
+  #coverage .cv-summary.gap { color: var(--amber); }
+  #coverage .cv-summary.ok { color: var(--green); }
+  #coverage .cv-grid { display: grid; gap: 6px; }
+  #coverage .cv-row { display: grid; grid-template-columns: minmax(140px, 240px) 1fr; gap: 12px; align-items: center; min-width: 0; }
+  #coverage .cv-meta { min-width: 0; }
+  #coverage .cv-title { font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #coverage .cv-sub { color: var(--dim); font-size: 12px; display: flex; align-items: center; gap: 6px;
+                      white-space: nowrap; overflow: hidden; font-variant-numeric: tabular-nums; }
+  #coverage .cv-must { color: var(--amber); border: 1px solid #5a3f0c; border-radius: 99px; padding: 0 6px;
+                       font-size: 10px; text-transform: uppercase; letter-spacing: .06em; flex: none; }
+  #coverage .cv-cells { display: flex; flex-wrap: wrap; gap: 4px; min-width: 0; }
+  #coverage .cv-cell { flex: 1 1 64px; min-width: 0; height: 36px; padding: 0 8px; border-radius: 6px; width: auto;
+                       display: flex; align-items: center; text-align: left; cursor: pointer;
+                       font: 500 12px/1.2 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+                       border: 1px solid var(--line); background: var(--c-surface); color: var(--dim); }
+  #coverage .cv-ctext { display: block; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #coverage .cv-cell.cv-s1 { background: transparent; border-color: transparent; color: #b9c4a6; }
+  #coverage .cv-cell.cv-s2 { background: transparent; border-color: transparent; color: #eef5e0; }
+  #coverage .cv-cell.cv-s3 { background: var(--green); border-color: var(--green); color: var(--c-on-accent); font-weight: 700; }
+  #coverage .cv-cell.cv-late { border-color: var(--red); box-shadow: inset 0 0 0 1px var(--red); color: #ff8a8b; background: #26100f; }
+  #coverage .cv-cell.sel { outline: 2px solid var(--text); outline-offset: 1px; }
+  #coverage .cv-cell:focus-visible { outline: 2px solid var(--blue); outline-offset: 1px; }
+  #coverage .cv-detail { background: var(--c-surface); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px;
+                         font-size: 13px; line-height: 1.4; min-height: 40px; overflow-wrap: anywhere; }
+  #coverage .cv-detail.idle { color: var(--dim); }
+  #coverage .cv-dtop { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 2px; }
+  #coverage .cv-dbadge { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em;
+                         padding: 1px 7px; border-radius: 99px; border: 1px solid var(--line); background: var(--c-surface); color: var(--dim); }
+  #coverage .cv-dbadge.cv-s1 { background: transparent; color: #b9c4a6; }
+  #coverage .cv-dbadge.cv-s2 { background: transparent; color: #eef5e0; }
+  #coverage .cv-dbadge.cv-s3 { background: var(--green); color: var(--c-on-accent); border-color: var(--green); }
+  #coverage .cv-dsec { color: var(--dim); font-size: 12px; }
+  #coverage .cv-dtext { color: var(--text); }
+  #coverage .cv-dev { color: var(--c-text-2); font-style: italic; margin-top: 2px; }
+  #coverage .cv-legend { display: flex; gap: 12px; flex-wrap: wrap; color: var(--dim); font-size: 11px; }
+  #coverage .cv-key { display: inline-flex; align-items: center; gap: 5px; }
+  #coverage .cv-sw { width: 12px; height: 12px; border-radius: 3px; border: 1px solid var(--line); background: var(--c-surface); }
+  #coverage .cv-sw.cv-s1 { background: transparent; }
+  #coverage .cv-sw.cv-s2 { background: transparent; }
+  #coverage .cv-sw.cv-s3 { background: var(--green); border-color: var(--green); }
+  #coverage .cv-sw.cv-late { background: #26100f; border-color: var(--red); }
+
+  /* zone 3: where the time went */
+  .pair { display: grid; grid-template-columns: 1fr; gap: 18px; }
+  .tw { display: grid; gap: 12px; }
+  .tw-row { display: grid; grid-template-columns: minmax(120px, 200px) minmax(0, 1fr) 86px; gap: 12px; align-items: center; }
+  .tw-meta { min-width: 0; }
+  .tw-title { font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tw-tags { display: flex; gap: 6px; align-items: center; color: var(--dim); font-size: 12px; }
+  .tw-bars { display: grid; gap: 3px; min-width: 0; }
+  .tw-track { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .tw-bar { height: 12px; border-radius: 3px; flex: none; min-width: 2px; }
+  .tw-bar.plan { background: #3a414c; }
+  .tw-bar.act { background: var(--green); }
+  .tw-bar.act.over { background: var(--amber); }
+  .tw-bar.act.way { background: var(--red); }
+  .tw-bar.act.under { background: var(--blue); }
+  .tw-lab { font-size: 11px; color: var(--dim); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .tw-delta { text-align: right; font-weight: 800; font-size: 17px; font-variant-numeric: tabular-nums; }
+  .tw-delta small { display: block; font-size: 11px; font-weight: 500; color: var(--dim); }
+  .tw-legend { display: flex; gap: 12px; flex-wrap: wrap; color: var(--dim); font-size: 11px; margin-top: 10px; }
+  .tw-legend i { display: inline-block; width: 12px; height: 8px; border-radius: 2px; margin-right: 5px; vertical-align: middle; }
+
+  /* zone 4: library */
+  .lib { display: grid; gap: 10px; }
+  .lib-item { border: 1px solid var(--line); border-left: 3px solid var(--violet); border-radius: 8px; padding: 10px 12px;
+              background: var(--c-surface); display: grid; gap: 6px; min-width: 0; }
+  .lib-item.kept { border-left-color: var(--green); }
+  .lib-item.dropped { border-left-color: #3a414c; opacity: .7; }
+  .lib-title { font-weight: 700; overflow-wrap: anywhere; }
+  .lib-meta { color: var(--dim); font-size: 12px; font-variant-numeric: tabular-nums; }
+  .lib-exp { color: var(--c-text-2); font-size: 14px; overflow-wrap: anywhere; }
+  .lib-act { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .lib-act button { padding: 6px 14px; font-size: 13px; background: transparent; color: var(--text); border: 1px solid var(--line); }
+  .lib-act button.on.keep { background: var(--green); color: var(--c-on-accent); border-color: var(--green); }
+  .lib-act button.on.drop { background: #3a414c; color: var(--text); border-color: #3a414c; }
+  .lib-state { font-size: 12px; color: var(--dim); }
+
+  /* zone 5: next plan */
+  .np { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 18px; }
+  table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+  th, td { text-align: right; padding: 7px 8px; border-bottom: 1px solid var(--line); font-size: 14px; }
+  th { color: var(--dim); font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; }
+  th:first-child, td:first-child { text-align: left; }
+  td:first-child { overflow-wrap: anywhere; }
+  td.new { font-weight: 800; }
+  tfoot td { font-weight: 700; border-bottom: 0; }
+  ol.sac { margin: 0; padding-left: 22px; display: grid; gap: 4px; }
+  ol.sac li { overflow-wrap: anywhere; }
+  .save-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 14px; }
+  .save-msg { font-size: 14px; overflow-wrap: anywhere; }
+  pre.md { white-space: pre-wrap; overflow-wrap: anywhere; background: var(--c-surface); border: 1px solid var(--line); border-radius: 8px;
+           padding: 10px 12px; font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--c-text-2); margin: 8px 0 0; }
+  details summary { cursor: pointer; color: var(--dim); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }
+  details.inner summary { text-transform: none; letter-spacing: 0; font-size: 13px; }
+
+  /* zone 6: behind the disclosure */
+  .more { display: grid; gap: 18px; margin-top: 14px; }
+  .more h3 { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--dim); margin: 0 0 8px; font-weight: 500; }
+  pre.debrief { white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; margin: 0; }
+  .log { display: grid; gap: 6px; }
+  .log > div { border-left: 3px solid var(--line); padding: 3px 10px; font-size: 13px; overflow-wrap: anywhere; }
+  .log > div.n { border-color: var(--amber); }
+  .log time { color: var(--dim); font-variant-numeric: tabular-nums; margin-right: 8px; }
+  .tx { max-height: 460px; overflow-y: auto; }
+  .status { display: inline-block; padding: 1px 8px; border-radius: 99px; font-weight: 700; font-size: 11px;
+            text-transform: uppercase; letter-spacing: .05em; background: var(--c-surface-2); margin-right: 6px; }
+  .s-on_track { background: var(--c-accent-soft); color: var(--green); }
+  .s-valuable_tangent { background: var(--c-tangent-soft); color: var(--violet); }
+  .s-drifting { background: var(--c-warn-soft); color: var(--amber); }
+  .s-behind { background: var(--c-bad-soft); color: var(--red); }
+  .s-wrapping_up { background: var(--c-info-soft); color: var(--blue); }
+  .err { color: var(--red); }
+
+  @media (min-width: 1200px) {
+    .pair { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); align-items: start; }
+    .stat .big { font-size: 56px; }
+  }
+  @media (max-width: 900px) {
+    .three { grid-template-columns: 1fr; }
+    .np { grid-template-columns: 1fr; }
+    .stat .big { font-size: 40px; }
+  }
+  @media (max-width: 640px) {
+    header { padding: 10px 16px; gap: 8px; }
+    header h1 { font-size: 16px; }
+    .picker { flex-basis: 100%; margin-left: 0; }
+    main { padding: 12px 16px 40px; gap: 12px; }
+    .panel, .stat { padding: 12px 14px; }
+    #coverage.cv { padding: 12px 14px; gap: 8px; }
+    #coverage .cv-summary { font-size: 15px; }
+    #coverage .cv-row { grid-template-columns: 1fr; gap: 4px; }
+    #coverage .cv-row + .cv-row { margin-top: 4px; }
+    #coverage .cv-cell { flex-basis: 44px; height: 40px; padding: 0 6px; width: auto; font-size: 11px; }
+    .tw-row { grid-template-columns: minmax(0, 1fr) 70px; gap: 4px 8px; }
+    .tw-bars { grid-column: 1 / -1; grid-row: 2; }
+    .tw-delta { font-size: 15px; }
+    th, td { padding: 6px 4px; font-size: 13px; }
+    .save-row button { width: 100%; padding: 14px; font-size: 16px; }
+  }
+
+  /* ---- Archilles theme layer ---- */
+  header { background: var(--c-surface); height: 56px; padding: 0 24px; }
+  header h1.wordmark { font-size: 15px; font-weight: 600; }
+  header h1 span { font-weight: 400; color: var(--c-muted); margin-left: 4px; }
+  .badge { height: 24px; display: inline-flex; align-items: center; background: var(--c-surface-2); }
+  select { font-family: var(--font); background: var(--c-surface); font-size: 13px; }
+  .panel, .stat, #coverage.cv { box-shadow: var(--shadow); }
+  button { background: var(--c-accent); color: var(--c-on-accent); font-weight: 600; font-size: 13px; border-radius: var(--r); }
+  button.ghost { background: var(--c-surface); color: var(--c-text); border: 1px solid var(--c-border-strong); padding: 8px 14px; }
+  button.ghost:hover { background: var(--c-surface-2); }
+  .title-line { font-size: 26px; font-weight: 650; letter-spacing: -.02em; }
+  .label { font-weight: 600; letter-spacing: .06em; }
+  .stat .big { font-weight: 600; letter-spacing: -.02em; }
+  .stat .delta { font-weight: 600; }
+  .mustb, #coverage .cv-must { border: 0; background: var(--c-warn-soft); color: var(--c-warn); }
+  .good { color: var(--c-ok); }
+  #coverage .cv-summary { font-weight: 600; }
+  #coverage .cv-summary.ok { color: var(--c-ok); }
+  #coverage .cv-cell { font-family: var(--font); background: var(--c-surface-2); border-color: var(--c-border); color: var(--c-muted); }
+  #coverage .cv-cell.cv-s1, #coverage .cv-dbadge.cv-s1, #coverage .cv-sw.cv-s1 { background: #e3e6fa; border-color: #e3e6fa; color: #4b4f80; }
+  #coverage .cv-cell.cv-s2, #coverage .cv-dbadge.cv-s2, #coverage .cv-sw.cv-s2 { background: #c3c8f2; border-color: #c3c8f2; color: #2e2f6b; }
+  #coverage .cv-cell.cv-s3, #coverage .cv-dbadge.cv-s3, #coverage .cv-sw.cv-s3 { background: #8d93e0; border-color: #8d93e0; color: #fff; font-weight: 600; }
+  #coverage .cv-cell.cv-late, #coverage .cv-sw.cv-late { background: var(--c-bad-soft); border-color: #f0b8b8; box-shadow: none; color: var(--c-bad); }
+  .tw-bar.plan { background: var(--c-border-strong); }
+  .tw-bar.act { background: var(--c-accent); }
+  .tw-delta { font-weight: 600; }
+  .lib-item { background: var(--c-surface); border-left-color: var(--c-tangent); }
+  .lib-item.kept { border-left-color: var(--c-ok); }
+  .lib-item.dropped { border-left-color: var(--c-border-strong); }
+  .lib-act button { background: var(--c-surface); }
+  .lib-act button.on.keep { background: var(--c-accent); border-color: var(--c-accent); }
+  .lib-act button.on.drop { background: var(--c-surface-2); border-color: var(--c-border-strong); }
+  td.new { font-weight: 600; }
+  .status { text-transform: capitalize; letter-spacing: 0; font-weight: 600; }
+  .s-on_track { color: var(--c-ok); background: var(--c-ok-soft); }
+  .log > div.n { border-color: var(--c-accent); }
+  @media print {
+    header { height: auto; padding: 8px 0; border: 0; }
+    main { max-width: none; padding: 0; }
+    details.more-wrap, .lib-act, .save-row { display: none !important; }
+    #coverage .cv-cell { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1 class="wordmark"><i></i>Super Archilles <span>Session report</span></h1>
+  <span class="ondevice">On-device · GB10</span>
+  <div class="picker">
+    <select id="pick" aria-label="Pick a session"><option value="">Loading sessions</option></select>
+    <button class="ghost noprint" type="button" onclick="window.print()" style="flex:none;display:inline-flex;align-items:center;gap:6px"><svg class="ico" viewBox="0 0 24 24"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>Export</button>
+    <a href="/" class="badge" style="text-decoration:none;flex:none">Live</a>
+  </div>
+</header>
+
+<main>
+  <div id="msg" class="panel note hidden"></div>
+  <section id="head" class="hidden">
+    <div class="title-line" id="talkName"></div>
+    <div class="sub-line" id="talkSub"></div>
+  </section>
+
+  <section class="three hidden" id="z1" aria-label="Three numbers"></section>
+
+  <section id="coverage" class="cv hidden" aria-label="Final coverage map"></section>
+
+  <div class="pair">
+    <section class="panel hidden" id="z3" aria-label="Where the time went"></section>
+    <section class="panel hidden" id="z4" aria-label="Saved explanations"></section>
+  </div>
+
+  <section class="panel hidden" id="z5" aria-label="The next plan"></section>
+
+  <section class="panel hidden" id="z6">
+    <details id="moreBox">
+      <summary>Coach notes, cues and transcript</summary>
+      <div class="more" id="more"></div>
+    </details>
+  </section>
+</main>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  function el(tag, cls, text) {
+    const n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = String(text);
+    return n;
+  }
+  const fmt = (s) => { s = Math.max(0, Math.round(Number(s) || 0)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; };
+  const sfmt = (d) => { d = Math.round(Number(d) || 0); return (d < 0 ? "-" : "+") + fmt(Math.abs(d)); };
+  const mins = (m) => String(Math.round(m * 100) / 100); // 0.75, 1.5, 2
+  const q = (m) => Math.round(m * 4) / 4;
+  const enc = encodeURIComponent;
+  const LABELS = ["Not yet", "Mentioned", "Explained", "Landed"];
+
+  let list = [];
+  let sid = "";
+  let R = null; // current report
+  let P = null; // previous run with the same name (or null)
+  let loadSeq = 0;
+
+  function say(text, isErr) {
+    const m = $("msg");
+    m.textContent = text || "";
+    m.className = "panel note" + (isErr ? " err" : "") + (text ? "" : " hidden");
+  }
+
+  async function getJSON(url, opts) {
+    const r = await fetch(url, opts);
+    if (!r.ok) {
+      let detail = `${r.status}`;
+      try { const j = await r.json(); if (j && j.detail) detail = typeof j.detail === "string" ? j.detail : JSON.stringify(j.detail); } catch {}
+      throw new Error(detail);
+    }
+    return r.json();
+  }
+
+  // ---------- derived data
+  const secs = (r) => (r && r.plan && Array.isArray(r.plan.sections) ? r.plan.sections : []);
+  const times = (r) => (r && Array.isArray(r.section_time_s) && r.section_time_s.length === secs(r).length ? r.section_time_s.map(Number) : null);
+  const plannedTotal = (r) => Number(r.planned_s) || (r.plan && Number(r.plan.total_s)) || secs(r).reduce((a, s) => a + s.minutes * 60, 0);
+
+  function scoreMap(r) {
+    const m = new Map();
+    const pts = r && r.coverage && Array.isArray(r.coverage.points) ? r.coverage.points : null;
+    if (!pts) return null;
+    for (const p of pts) {
+      const key = `${p.section}:${p.point}`;
+      const sc = Math.max(0, Math.min(3, p.score | 0));
+      const prev = m.get(key);
+      if (!prev || sc >= prev.score) m.set(key, { score: sc, evidence: p.evidence || "" });
+    }
+    return m;
+  }
+
+  // A must section counts as delivered if more than 15 s was spent in it, or any of its points reached score >= 2.
+  // Old reports without either signal fall back to the coach's "covered" list.
+  function mustStats(r) {
+    const ss = secs(r), t = times(r), sm = scoreMap(r);
+    const covered = new Set(Array.isArray(r.covered) ? r.covered : []);
+    const haveSignal = !!(t || sm || covered.size);
+    let total = 0, done = 0; const missed = [];
+    ss.forEach((s, i) => {
+      if (!s.must) return;
+      total++;
+      let ok = false;
+      if (t && t[i] > 15) ok = true;
+      if (sm) for (const [k, v] of sm) if (k.split(":")[0] === String(i) && v.score >= 2) ok = true;
+      if (!t && !sm && (s.points || []).some((p) => covered.has(p))) ok = true;
+      if (ok) done++; else missed.push(s.title);
+    });
+    return { total, done, missed, haveSignal };
+  }
+
+  // Which section was the speaker in at time t: the coach timeline if present, else the plan timing.
+  function sectionAt(r, t) {
+    const ss = secs(r);
+    const tl = Array.isArray(r.timeline) ? r.timeline : [];
+    let idx = null;
+    for (const v of tl) if (v.t <= t && Number.isInteger(v.section) && v.section >= 0 && v.section < ss.length) idx = v.section;
+    if (idx == null) {
+      idx = ss.length - 1;
+      for (let i = 0; i < ss.length; i++) if (t < ss[i].end_s) { idx = i; break; }
+    }
+    return ss[idx] ? ss[idx].title : "";
+  }
+
+  // ---------- zone 1: three numbers
+  function renderThree() {
+    const z = $("z1"); z.textContent = ""; z.classList.remove("hidden");
+    const dur = Number(R.duration_s) || 0, plan = plannedTotal(R), d = dur - plan;
+
+    const a = el("div", "stat");
+    a.append(el("div", "label", "Spoken vs planned"));
+    const big = el("div", "big");
+    big.append(document.createTextNode(fmt(dur)), el("small", null, ` / ${fmt(plan)}`));
+    a.append(big);
+    a.append(el("div", "delta " + (Math.abs(d) <= 10 ? "good" : d > 0 ? (d > plan * 0.15 ? "bad" : "pos") : "neg"),
+      Math.abs(d) <= 10 ? `${sfmt(d)} on time` : d > 0 ? `${sfmt(d)} over` : `${sfmt(d)} under`));
+    if (P) {
+      const pd = dur - (Number(P.duration_s) || 0);
+      a.append(el("span", "vs", `vs last run ${fmt(P.duration_s)}: ${sfmt(pd)}`));
+    }
+
+    const ms = mustStats(R);
+    const b = el("div", "stat");
+    b.append(el("div", "label", "Must sections delivered"));
+    if (!ms.total) {
+      b.append(el("div", "big", "none"), el("div", "detail", "This plan has no [must] sections."));
+    } else if (!ms.haveSignal) {
+      b.append(el("div", "big", "n/a"), el("div", "detail", "This report has no per-section timing or coverage."));
+    } else {
+      const bb = el("div", "big " + (ms.done === ms.total ? "good" : "pos"));
+      bb.append(document.createTextNode(String(ms.done)), el("small", null, ` of ${ms.total}`));
+      b.append(bb);
+      b.append(el("div", "detail", ms.missed.length ? `Missed: ${ms.missed.join(", ")}` : "Every mandatory section landed."));
+    }
+    if (P && ms.total) {
+      const pm = mustStats(P);
+      if (pm.haveSignal && pm.total) {
+        const dd = ms.done - pm.done;
+        b.append(el("span", "vs", `vs last run ${pm.done} of ${pm.total}: ${dd >= 0 ? "+" : ""}${dd}`));
+      }
+    }
+
+    const nn = Array.isArray(R.nudges) ? R.nudges.length : 0;
+    const c = el("div", "stat");
+    c.append(el("div", "label", "Cues"));
+    c.append(el("div", "big", String(nn)));
+    const last = nn ? R.nudges[nn - 1] : null;
+    c.append(el("div", "detail", last ? `Last at ${fmt(last[0])}: ${last[1]}` : "No cues needed."));
+    if (P) {
+      const pn = Array.isArray(P.nudges) ? P.nudges.length : 0;
+      const dd = nn - pn;
+      c.append(el("span", "vs", `vs last run ${pn}: ${dd >= 0 ? "+" : ""}${dd}`));
+    }
+    z.append(a, b, c);
+  }
+
+  // ---------- zone 2: final coverage map
+  function renderCoverage() {
+    const root = $("coverage"); root.textContent = ""; root.className = "cv";
+    const ss = secs(R), t = times(R), sm = scoreMap(R);
+    const covered = new Set(Array.isArray(R.covered) ? R.covered : []);
+    if (!ss.length) { root.classList.add("hidden"); return; }
+    // mode: "scores" (coverage worker), "time" (section-level from section_time_s), "covered" (old reports)
+    const mode = sm ? "scores" : t ? "time" : "covered";
+
+    const head = el("div", "cv-head");
+    head.append(el("div", "cv-label", "Final coverage map"));
+    const tally = el("div", "cv-tally");
+    head.append(tally);
+    const summary = el("div", "cv-summary");
+    const grid = el("div", "cv-grid");
+    const detail = el("div", "cv-detail idle", "Tap a cell to see the point and what was said.");
+    const legend = el("div", "cv-legend");
+    LABELS.forEach((x, i) => { const k = el("span", "cv-key"); k.append(el("i", `cv-sw cv-s${i}`), document.createTextNode(x)); legend.append(k); });
+    const lk = el("span", "cv-key"); lk.append(el("i", "cv-sw cv-late"), document.createTextNode("Must, never landed")); legend.append(lk);
+
+    if (mode === "scores") {
+      const s = (R.coverage && R.coverage.summary) || "";
+      summary.textContent = s;
+      summary.className = "cv-summary" + (/^(Not yet|Thin)/.test(s) ? " gap" : s ? " ok" : "");
+    } else if (mode === "time") {
+      summary.textContent = "No coverage scores in this report. Shaded by time spent per section.";
+      summary.className = "cv-summary gap";
+    } else {
+      summary.textContent = "No coverage scores in this report. Shaded by the coach's covered list.";
+      summary.className = "cv-summary gap";
+    }
+
+    let selected = null, done = 0, n = 0;
+    const cells = [];
+    function show(c) {
+      detail.textContent = "";
+      if (!c) { detail.className = "cv-detail idle"; detail.textContent = "Tap a cell to see the point and what was said."; return; }
+      detail.className = "cv-detail";
+      const top = el("div", "cv-dtop");
+      top.append(el("span", `cv-dbadge cv-s${c.sc}`, LABELS[c.sc]), el("span", "cv-dsec", c.sec.title + (c.sec.must ? " (must)" : "")));
+      detail.append(top, el("div", "cv-dtext", c.text));
+      if (c.evidence) detail.append(el("div", "cv-dev", `Heard: "${c.evidence}"`));
+      else if (c.note) detail.append(el("div", "cv-dev", c.note));
+    }
+
+    ss.forEach((s, si) => {
+      const row = el("div", "cv-row");
+      const meta = el("div", "cv-meta");
+      meta.append(el("div", "cv-title", s.title));
+      const sub = el("div", "cv-sub");
+      if (s.must) sub.append(el("span", "cv-must", "must"));
+      const plan = s.minutes * 60;
+      if (t) {
+        sub.append(document.createTextNode(`${fmt(t[si])} of ${fmt(plan)} `));
+        const dd = t[si] - plan;
+        sub.append(el("span", Math.abs(dd) <= 5 ? "good" : dd > 0 ? "pos" : "neg", sfmt(dd)));
+      } else sub.append(document.createTextNode(`${fmt(plan)} planned`));
+      meta.append(sub);
+      const strip = el("div", "cv-cells");
+      let items;
+      if (mode === "time") {
+        const ratio = plan ? t[si] / plan : 0;
+        const sc = t[si] <= 15 ? 0 : ratio < 0.5 ? 1 : ratio < 0.9 ? 2 : 3;
+        items = [{ text: s.title, sc, evidence: "", note: `Section-level only: ${fmt(t[si])} spoken of ${fmt(plan)} planned.` }];
+      } else {
+        const pts = s.points && s.points.length ? s.points.map((p, pi) => [pi, p]) : [[-1, s.title]];
+        items = pts.map(([pi, text]) => {
+          if (mode === "scores") {
+            const v = sm.get(`${si}:${pi}`) || { score: 0, evidence: "" };
+            return { text, sc: v.score, evidence: v.evidence, note: v.score === 0 ? "Not covered." : "" };
+          }
+          const hit = covered.has(text);
+          return { text, sc: hit ? 2 : 0, evidence: "", note: hit ? "The coach marked this covered." : "Not marked covered by the coach." };
+        });
+      }
+      for (const it of items) {
+        const c = { ...it, sec: s };
+        n++; if (c.sc >= 2) done++;
+        const b = el("button", `cv-cell cv-s${c.sc}` + (s.must && c.sc === 0 ? " cv-late" : ""));
+        b.type = "button";
+        b.append(el("span", "cv-ctext", c.text));
+        const tip = `${s.title}: ${c.text}\n${LABELS[c.sc]}` + (c.evidence ? `: "${c.evidence}"` : "");
+        b.title = tip; b.setAttribute("aria-label", tip);
+        b.addEventListener("click", () => {
+          selected = selected === c ? null : c;
+          for (const x of cells) x.el.classList.toggle("sel", x === selected);
+          show(selected);
+        });
+        b.addEventListener("mouseenter", () => show(c));
+        b.addEventListener("mouseleave", () => show(selected));
+        c.el = b; cells.push(c);
+        strip.append(b);
+      }
+      row.append(meta, strip);
+      grid.append(row);
+    });
+    tally.textContent = mode === "time" ? `${done} of ${n} sections given their time` : `${done} of ${n} points explained or landed`;
+    root.append(head, summary, grid, detail, legend);
+  }
+
+  // ---------- zone 3: where the time went
+  function renderTime() {
+    const z = $("z3"); z.textContent = ""; z.classList.remove("hidden");
+    const ss = secs(R), t = times(R);
+    const lab = el("div", "label", "Where the time went");
+    z.append(lab);
+    if (!t) { z.append(el("div", "note", "This report has no per-section timing (recorded before the debrief data existed).")); return; }
+    lab.append(el("span", "aside", "sorted by overrun"));
+    const pt = times(P), pss = secs(P);
+    const prevByTitle = new Map();
+    if (pt) pss.forEach((s, i) => prevByTitle.set(s.title, pt[i]));
+    const rows = ss.map((s, i) => ({ s, plan: s.minutes * 60, act: t[i] })).map((r) => ({ ...r, dev: r.act - r.plan }));
+    rows.sort((a, b) => b.dev - a.dev);
+    const max = Math.max(1, ...rows.map((r) => Math.max(r.plan, r.act)));
+    const box = el("div", "tw");
+    for (const r of rows) {
+      const row = el("div", "tw-row");
+      const meta = el("div", "tw-meta");
+      meta.append(el("div", "tw-title", r.s.title));
+      const tags = el("div", "tw-tags");
+      if (r.s.must) tags.append(el("span", "mustb", "must"));
+      tags.append(document.createTextNode(`${mins(r.s.minutes)} min planned`));
+      meta.append(tags);
+      const bars = el("div", "tw-bars");
+      const tp = el("div", "tw-track"); const bp = el("div", "tw-bar plan"); bp.style.width = `${(r.plan / max) * 78}%`;
+      tp.append(bp, el("span", "tw-lab", `plan ${fmt(r.plan)}`));
+      const ta = el("div", "tw-track");
+      const cls = r.act > r.plan * 1.5 && r.dev > 15 ? "way" : r.dev > Math.max(5, r.plan * 0.1) ? "over" : r.act < r.plan * 0.6 ? "under" : "";
+      const ba = el("div", "tw-bar act " + cls); ba.style.width = `${(r.act / max) * 78}%`;
+      ta.append(ba, el("span", "tw-lab", `spoke ${fmt(r.act)}`));
+      bars.append(tp, ta);
+      const delta = el("div", "tw-delta " + (Math.abs(r.dev) <= 5 ? "good" : r.dev > 0 ? "pos" : "neg"), sfmt(r.dev));
+      if (prevByTitle.has(r.s.title)) delta.append(el("small", null, `vs last ${sfmt(r.act - prevByTitle.get(r.s.title))}`));
+      row.append(meta, delta, bars);
+      // grid order: meta, bars, delta on wide screens
+      bars.style.order = "1"; delta.style.order = "2";
+      box.append(row);
+    }
+    z.append(box);
+    const lg = el("div", "tw-legend");
+    for (const [c, x] of [["#3a414c", "planned"], ["var(--green)", "on budget"], ["var(--amber)", "over"], ["var(--red)", "way over"], ["var(--blue)", "short"]]) {
+      const k = el("span"); const i = el("i"); i.style.background = c; k.append(i, document.createTextNode(x)); lg.append(k);
+    }
+    z.append(lg);
+    if (P && !pt) z.append(el("div", "note", "The last run has no per-section timing, so no per-section comparison."));
+  }
+
+  // ---------- zone 4: the library
+  function renderLibrary() {
+    const z = $("z4"); z.textContent = ""; z.classList.remove("hidden");
+    $("z3").classList.add("hidden");
+    const lib = Array.isArray(R.library) ? R.library : [];
+    const lab = el("div", "label", "Saved explanations");
+    lab.append(el("span", "aside", "saved tangents, you decide what was useful"));
+    z.append(lab);
+    if (!lib.length) { z.classList.add("hidden"); return; }  // nothing saved: don't show an empty panel
+    const box = el("div", "lib");
+    lib.forEach((t, i) => {
+      const item = el("div", "lib-item");
+      item.append(el("div", "lib-title", t.title || "(untitled)"));
+      const sec = sectionAt(R, Number(t.at_s) || 0);
+      item.append(el("div", "lib-meta", `at ${fmt(t.at_s)}` + (sec ? `, during ${sec}` : "")));
+      if (t.explanation) item.append(el("div", "lib-exp", t.explanation));
+      const act = el("div", "lib-act");
+      const kb = el("button", "keep", "Keep"); kb.type = "button";
+      const db = el("button", "drop", "Drop"); db.type = "button";
+      const st = el("span", "lib-state");
+      const paint = () => {
+        kb.classList.toggle("on", t.keep === true); kb.setAttribute("aria-pressed", String(t.keep === true));
+        db.classList.toggle("on", t.keep === false); db.setAttribute("aria-pressed", String(t.keep === false));
+        item.className = "lib-item" + (t.keep === true ? " kept" : t.keep === false ? " dropped" : "");
+        st.textContent = t.keep === true ? "Kept for next time" : t.keep === false ? "Dropped" : "Not rated yet";
+        st.className = "lib-state";
+      };
+      const send = async (keep) => {
+        kb.disabled = db.disabled = true;
+        try {
+          const res = await getJSON(`/sessions/${enc(sid)}/library/${i}`, {
+            method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ keep }),
+          });
+          t.keep = res && typeof res.keep === "boolean" ? res.keep : keep;
+          paint();
+        } catch (e) {
+          paint(); st.textContent = `Could not save: ${e.message}`; st.className = "lib-state err";
+        } finally { kb.disabled = db.disabled = false; }
+      };
+      kb.addEventListener("click", () => send(true));
+      db.addEventListener("click", () => send(false));
+      act.append(kb, db, st);
+      item.append(act);
+      paint();
+      box.append(item);
+    });
+    z.append(box);
+  }
+
+  // ---------- zone 5: the next plan (pure arithmetic)
+  function nextPlan() {
+    const ss = secs(R), t = times(R);
+    if (!ss.length || !t) return null;
+    const totalM = ss.reduce((a, s) => a + s.minutes, 0);
+    const rows = ss.map((s, i) => {
+      const act = t[i] / 60;
+      const blend = q(0.5 * s.minutes + 0.5 * act);
+      return { s, i, plan: s.minutes, act, blend, next: s.must ? Math.max(s.minutes, blend) : blend };
+    });
+    const must = rows.filter((r) => r.s.must), flex = rows.filter((r) => !r.s.must);
+    const mustSum = must.reduce((a, r) => a + r.next, 0);
+    let room = totalM - mustSum;
+    let warn = "";
+    if (flex.length) {
+      if (room < 0.25 * flex.length) {
+        warn = `Must sections alone need ${mins(mustSum)} min of ${mins(totalM)}. Every optional section is cut to the 0.25 min floor; consider dropping some.`;
+        flex.forEach((r) => (r.next = 0.25));
+      } else {
+        const B = flex.reduce((a, r) => a + r.blend, 0) || 1;
+        flex.forEach((r) => (r.next = Math.max(0.25, q((r.blend * room) / B))));
+        // fix rounding residual in 0.25 steps so the total matches the original plan exactly
+        let diff = q(room - flex.reduce((a, r) => a + r.next, 0));
+        let guard = 400;
+        while (Math.abs(diff) >= 0.25 && guard--) {
+          if (diff > 0) {
+            const r = flex.reduce((a, b) => (b.next > a.next ? b : a)); r.next += 0.25; diff -= 0.25;
+          } else {
+            const cands = flex.filter((r) => r.next > 0.25);
+            if (!cands.length) break;
+            const r = cands.reduce((a, b) => (b.next > a.next ? b : a)); r.next -= 0.25; diff += 0.25;
+          }
+        }
+      }
+    } else if (mustSum > totalM) {
+      warn = `Every section is a must, so the plan grows to ${mins(mustSum)} min.`;
+    }
+    const newTotal = rows.reduce((a, r) => a + r.next, 0);
+    const sacrifice = flex.slice().sort((a, b) => (b.act - b.plan) - (a.act - a.plan));
+    return { rows, totalM, newTotal, sacrifice, warn };
+  }
+
+  function planMarkdown(np) {
+    const obj = (R.plan && R.plan.objective && R.plan.objective !== "(none given)") ? R.plan.objective : "";
+    const lines = [];
+    if (obj) lines.push(`# Objective: ${obj}`, "");
+    for (const r of np.rows) {
+      const title = String(r.s.title).replace(/[\r\n]+/g, " ");
+      lines.push(`## ${title} (${mins(r.next)} min)${r.s.must ? " [must]" : ""}`);
+      for (const p of r.s.points || []) lines.push(`- ${String(p).replace(/[\r\n]+/g, " ")}`);
+      lines.push("");
+    }
+    return lines.join("\n").trim() + "\n";
+  }
+
+  function renderNext() {
+    const z = $("z5"); z.textContent = ""; z.classList.remove("hidden");
+    const lab = el("div", "label", "The next plan");
+    z.append(lab);
+    const np = nextPlan();
+    if (!np) { z.append(el("div", "note", "Needs per-section timing, which this report does not have.")); return; }
+    lab.title = "New = half planned + half spoken, rounded to 0.25 min; optional sections scaled to keep the total";
+    const wrap = el("div", "np");
+    const left = el("div");
+    const tbl = el("table");
+    const thead = el("thead"); const hr = el("tr");
+    for (const h of ["Section", "Old", "New", "Change"]) hr.append(el("th", null, h));
+    thead.append(hr);
+    const tb = el("tbody");
+    for (const r of np.rows) {
+      const tr = el("tr");
+      const td0 = el("td"); td0.append(document.createTextNode(r.s.title + " "));
+      if (r.s.must) td0.append(el("span", "mustb", "must"));
+      const ch = r.next - r.plan;
+      tr.append(td0, el("td", null, mins(r.plan)), el("td", "new", mins(r.next)),
+        el("td", Math.abs(ch) < 0.01 ? "" : ch > 0 ? "pos" : "neg", Math.abs(ch) < 0.01 ? "same" : `${ch > 0 ? "+" : "-"}${mins(Math.abs(ch))}`));
+      tb.append(tr);
+    }
+    const tf = el("tfoot"); const fr = el("tr");
+    const actTot = np.rows.reduce((a, r) => a + r.act, 0);
+    fr.append(el("td", null, "Total (min)"), el("td", null, mins(np.totalM)), el("td", "new", mins(np.newTotal)), el("td"));
+    tf.append(fr);
+    tbl.append(thead, tb, tf);
+    left.append(tbl);
+    if (np.warn) left.append(el("div", "note pos", np.warn));
+    const right = el("div");
+    right.append(el("div", "label", "Sacrifice order if you run long"));
+    if (np.sacrifice.length) {
+      const ol = el("ol", "sac");
+      for (const r of np.sacrifice) {
+        const li = el("li");
+        const d = (r.act - r.plan) * 60;
+        li.append(document.createTextNode(`${r.s.title} `), el("span", Math.abs(d) <= 5 ? "note" : d > 0 ? "pos" : "neg", `(${sfmt(d)} last time)`));
+        ol.append(li);
+      }
+      right.append(ol);
+    } else right.append(el("div", "note", "Every section is a must; nothing to sacrifice."));
+    wrap.append(left, right);
+    z.append(wrap);
+
+    const md = planMarkdown(np);
+    const name = `${R.name || "talk"}-next`.toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-+|-+$/g, "") || "plan"; // same slug the server uses
+    const row = el("div", "save-row");
+    const btn = el("button", null, `Save as ${name}`); btn.type = "button";
+    const msg = el("span", "save-msg");
+    btn.addEventListener("click", async () => {
+      btn.disabled = true; msg.className = "save-msg note"; msg.textContent = "Saving...";
+      try {
+        const res = await getJSON("/plans", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, markdown: md }) });
+        msg.className = "save-msg good";
+        msg.textContent = `Saved as plans/${res.name}.md. Pick it from "Load a saved plan" on the live page.`;
+      } catch (e) {
+        msg.className = "save-msg err"; msg.textContent = `Could not save: ${e.message}`;
+      } finally { btn.disabled = false; }
+    });
+    row.append(btn, msg);
+    z.append(row);
+    const det = el("details", "inner");
+    det.append(el("summary", null, "Plan markdown"), el("pre", "md", md));
+    z.append(det);
+  }
+
+  // ---------- zone 6: behind the disclosure
+  function renderMore() {
+    $("z6").classList.remove("hidden");
+    const m = $("more"); m.textContent = "";
+    const part = (title) => { const s = el("section"); s.append(el("h3", null, title)); m.append(s); return s; };
+
+    const d = part("Coach debrief");
+    d.append(R.debrief ? el("pre", "debrief", R.debrief) : el("div", "note", "No debrief text."));
+
+    const n = part(`Cues (${(R.nudges || []).length})`);
+    if ((R.nudges || []).length) {
+      const log = el("div", "log");
+      for (const [t, x] of R.nudges) { const r = el("div", "n"); r.append(el("time", null, fmt(t)), document.createTextNode(x)); log.append(r); }
+      n.append(log);
+    } else n.append(el("div", "note", "None."));
+
+    const tl = part("Coach timeline");
+    const tlv = Array.isArray(R.timeline) ? R.timeline : [];
+    if (tlv.length) {
+      const ss = secs(R); const log = el("div", "log");
+      for (const v of tlv) {
+        const r = el("div", v.nudge ? "n" : "");
+        r.append(el("time", null, fmt(v.t)));
+        if (v.status) r.append(el("span", `status s-${String(v.status).replace(/[^a-z_]/g, "")}`, String(v.status).replace(/_/g, " ")));
+        const sec = Number.isInteger(v.section) && ss[v.section] ? ss[v.section].title : "";
+        r.append(document.createTextNode([sec, v.reason].filter(Boolean).join(": ")));
+        if (v.nudge) r.append(el("div", "pos", `Cue: ${v.nudge}`));
+        log.append(r);
+      }
+      tl.append(log);
+    } else tl.append(el("div", "note", "No timeline in this report."));
+
+    const cs = part("Cards");
+    const cards = Array.isArray(R.cards) ? R.cards : [];
+    if (cards.length) {
+      const log = el("div", "log");
+      for (const c of cards.slice().sort((a, b) => (a.at_s || 0) - (b.at_s || 0))) {
+        const r = el("div");
+        r.append(el("time", null, c.at_s != null ? fmt(c.at_s) : "-"));
+        r.append(el("span", "status", [c.kind, c.status].filter(Boolean).join(" ")));
+        r.append(document.createTextNode(c.title || "(untitled)"));
+        const extra = [c.source && `from ${c.source}`, c.reason].filter(Boolean).join(", ");
+        if (extra) r.append(el("div", "note", extra));
+        log.append(r);
+      }
+      cs.append(log);
+    } else cs.append(el("div", "note", "No cards in this report."));
+
+    const tx = part("Transcript");
+    const tt = Array.isArray(R.transcript_timed) ? R.transcript_timed : null;
+    if (tt && tt.length) {
+      const log = el("div", "log tx");
+      for (const [t, x] of tt) { const r = el("div"); r.append(el("time", null, fmt(t)), document.createTextNode(x)); log.append(r); }
+      tx.append(log);
+    } else if (R.transcript) tx.append(el("div", "tx", R.transcript));
+    else tx.append(el("div", "note", "No transcript."));
+  }
+
+  // ---------- load + picker
+  const titleCase = (x) => String(x || "").replace(/(^|[\s-])(\p{Ll})/gu, (m, sp, ch) => sp + ch.toUpperCase());
+
+  function renderAll() {
+    $("head").classList.remove("hidden");
+    $("talkName").textContent = titleCase(R.name || sid);
+    $("talkSub").textContent = (R.started_at || "") + (P ? `  ·  compared with your previous run at ${(P.started_at || "").slice(11)}` : "");
+    // Time per section lives in the coverage rows; no separate time chart (it repeated the same numbers).
+    const steps = [renderThree, renderCoverage, renderLibrary, renderNext, renderMore];
+    for (const f of steps) {
+      try { f(); } catch (e) { console.error(e); say(`Part of the page failed to render: ${e.message}`, true); }
+    }
+    document.title = `Debrief: ${titleCase(R.name || sid)}`;
+  }
+
+  async function load(id) {
+    const my = ++loadSeq;
+    sid = id;
+    say("Loading session");
+    try {
+      const r = await getJSON(`/sessions/${enc(id)}`);
+      let p = null;
+      const idx = list.findIndex((x) => x.id === id);
+      const prev = idx >= 0 ? list.slice(idx + 1).find((x) => x.name === r.name) : null;
+      if (prev) { try { p = await getJSON(`/sessions/${enc(prev.id)}`); } catch { p = null; } }
+      if (my !== loadSeq) return;
+      R = r; P = p;
+      say("");
+      renderAll();
+    } catch (e) {
+      if (my !== loadSeq) return;
+      say(`Could not load that session: ${e.message}`, true);
+    }
+  }
+
+  async function init() {
+    const pick = $("pick");
+    try { list = await getJSON("/sessions"); } catch (e) { say(`Could not list sessions: ${e.message}`, true); return; }
+    if (!Array.isArray(list)) list = [];
+    pick.textContent = "";
+    if (!list.length) { pick.append(el("option", null, "No sessions yet")); say("No sessions yet."); return; }
+    for (const s of list) {
+      const o = el("option", null, `${s.name || s.id}, ${s.started_at || ""}, ${fmt(s.duration_s)} of ${fmt(s.planned_s)}`);
+      o.value = s.id; pick.append(o);
+    }
+    const want = new URLSearchParams(location.search).get("id");
+    const id = want && list.some((x) => x.id === want) ? want : want || list[0].id;
+    if (list.some((x) => x.id === id)) pick.value = id;
+    pick.addEventListener("change", () => {
+      const u = new URL(location.href); u.searchParams.set("id", pick.value);
+      history.replaceState(null, "", u);
+      window.scrollTo(0, 0);
+      load(pick.value);
+    });
+    load(id);
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>

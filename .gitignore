@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+data/
+*.wav
+.claude/
+.env.local
+.env

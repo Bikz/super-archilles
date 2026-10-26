@@ -1,0 +1,162 @@
+/* Archilles design system. One file, no build step, works offline.
+   Light by default; [data-theme="dark"] on <html> for the console and the stage. */
+
+@font-face {
+  font-family: "Inter";
+  src: url("/static/inter.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* palette: the original Super Archilles look (dark, NVIDIA green accent) */
+  --c-bg: #0b0d10;
+  --c-surface: #14171c;
+  --c-surface-2: #1b2028;
+  --c-sunken: #0f1216;
+  --c-border: #252a32;
+  --c-border-strong: #343a45;
+  --c-text: #e8eaed;
+  --c-text-2: #c9ced6;
+  --c-muted: #8a929e;
+  --c-faint: #5b636d;
+  --c-accent: #76b900;
+  --c-accent-hover: #8bd100;
+  --c-accent-soft: #1d2e05;
+  --c-accent-line: #3a5a00;
+  --c-on-accent: #0b0d10;
+  --c-ok: #76b900;      --c-ok-soft: #1d2e05;
+  --c-warn: #f5a623;    --c-warn-soft: #33240a;
+  --c-bad: #ff4d4f;     --c-bad-soft: #3a1416;
+  --c-info: #4da3ff;    --c-info-soft: #0f2238;
+  --c-tangent: #b07cff; --c-tangent-soft: #241a38;
+  --c-nv: #76b900;
+  --c-slide: #0b0d10;
+
+  /* type */
+  --font: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  --fs-xs: 12px; --fs-sm: 13px; --fs-md: 15px; --fs-lg: 18px; --fs-xl: 24px; --fs-2xl: 32px; --fs-3xl: 44px;
+
+  /* space, radius, elevation */
+  --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px; --s-5: 24px; --s-6: 32px; --s-7: 48px;
+  --r-sm: 6px; --r: 10px; --r-lg: 12px; --r-pill: 999px;
+  --shadow-sm: none;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .3);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, .35);
+
+  /* legacy names used by page styles */
+  --bg: var(--c-bg); --panel: var(--c-surface); --line: var(--c-border); --text: var(--c-text); --dim: var(--c-muted);
+  --green: var(--c-accent); --amber: var(--c-warn); --red: var(--c-bad); --blue: var(--c-info); --violet: var(--c-tangent);
+  color-scheme: dark; accent-color: var(--c-accent);
+}
+
+:root[data-theme="dark"] {
+  /* palette: the original Super Archilles look (dark, NVIDIA green accent) */
+  --c-bg: #0b0d10;
+  --c-surface: #14171c;
+  --c-surface-2: #1b2028;
+  --c-sunken: #0f1216;
+  --c-border: #252a32;
+  --c-border-strong: #343a45;
+  --c-text: #e8eaed;
+  --c-text-2: #c9ced6;
+  --c-muted: #8a929e;
+  --c-faint: #5b636d;
+  --c-accent: #76b900;
+  --c-accent-hover: #8bd100;
+  --c-accent-soft: #1d2e05;
+  --c-accent-line: #3a5a00;
+  --c-on-accent: #0b0d10;
+  --c-ok: #76b900;      --c-ok-soft: #1d2e05;
+  --c-warn: #f5a623;    --c-warn-soft: #33240a;
+  --c-bad: #ff4d4f;     --c-bad-soft: #3a1416;
+  --c-info: #4da3ff;    --c-info-soft: #0f2238;
+  --c-tangent: #b07cff; --c-tangent-soft: #241a38;
+  --c-nv: #76b900;
+  --c-slide: #0b0d10;
+  --shadow-sm: none; --shadow: 0 1px 2px rgba(0, 0, 0, .3); --shadow-lg: 0 8px 24px rgba(0, 0, 0, .35);
+  color-scheme: dark;
+}
+
+/* base */
+html, body { font-family: var(--font) !important; }
+body { background: var(--c-bg); color: var(--c-text); -webkit-font-smoothing: antialiased;
+       font-feature-settings: "cv11", "ss01"; }
+.tnum, time, .clock, .num { font-variant-numeric: tabular-nums; }
+a { color: var(--c-accent); }
+::selection { background: var(--c-accent-soft); }
+
+/* buttons */
+.btn, button.primary { display: inline-flex; align-items: center; justify-content: center; gap: var(--s-2);
+  height: 38px; padding: 0 var(--s-4); border-radius: var(--r); font: 600 var(--fs-sm)/1 var(--font);
+  border: 1px solid transparent; cursor: pointer; background: var(--c-accent); color: var(--c-on-accent);
+  text-decoration: none; transition: background .15s, border-color .15s; }
+.btn:hover { background: var(--c-accent-hover); }
+.btn.secondary { background: var(--c-surface); color: var(--c-text); border-color: var(--c-border-strong); box-shadow: var(--shadow-sm); }
+.btn.secondary:hover { background: var(--c-surface-2); }
+.btn.ghost { background: transparent; color: var(--c-text-2); }
+.btn.ghost:hover { background: var(--c-surface-2); }
+.btn svg, .ico { width: 16px; height: 16px; flex: none; stroke: currentColor; fill: none; stroke-width: 2;
+  stroke-linecap: round; stroke-linejoin: round; vertical-align: -3px; }
+
+/* card */
+.card { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--r-lg);
+  box-shadow: var(--shadow); padding: var(--s-4) var(--s-5); }
+
+/* section header */
+.section-h { font-size: var(--fs-xs); font-weight: 600; color: var(--c-muted); letter-spacing: .04em;
+  text-transform: uppercase; margin: 0 0 var(--s-2); }
+
+/* badge / pill */
+.pill-b { display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 10px; border-radius: var(--r-pill);
+  font-size: var(--fs-xs); font-weight: 500; color: var(--c-text-2); background: var(--c-surface-2); border: 1px solid var(--c-border); }
+.ondevice { display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 10px; border-radius: var(--r-pill);
+  font-size: var(--fs-xs); font-weight: 500; color: var(--c-text-2); background: var(--c-surface); border: 1px solid var(--c-border); white-space: nowrap; }
+.ondevice::before { content: ""; width: 8px; height: 8px; border-radius: 2px; background: var(--c-nv); }
+
+/* status dot + label */
+.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--c-faint); flex: none; }
+.dot.ok { background: var(--c-ok); } .dot.warn { background: var(--c-warn); } .dot.bad { background: var(--c-bad); }
+.dot.info { background: var(--c-info); } .dot.accent { background: var(--c-accent); }
+
+/* KPI stat */
+.kpi { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--r-lg); padding: var(--s-4); box-shadow: var(--shadow); }
+.kpi b, .kpi .v { display: block; font-size: var(--fs-2xl); font-weight: 600; letter-spacing: -.02em; font-variant-numeric: tabular-nums; color: var(--c-text); }
+.kpi span, .kpi .k { font-size: var(--fs-sm); color: var(--c-muted); }
+
+/* table */
+.table { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
+.table th { text-align: left; font-weight: 500; color: var(--c-muted); font-size: var(--fs-xs); padding: 8px 12px; border-bottom: 1px solid var(--c-border); }
+.table td { padding: 10px 12px; border-bottom: 1px solid var(--c-border); vertical-align: middle; }
+
+/* empty state, skeleton */
+.empty { display: grid; place-items: center; gap: var(--s-2); color: var(--c-muted); text-align: center; padding: var(--s-6); }
+.skeleton { background: linear-gradient(90deg, var(--c-surface-2), var(--c-sunken), var(--c-surface-2)); background-size: 200% 100%;
+  animation: sk 1.4s ease-in-out infinite; border-radius: var(--r-sm); }
+@keyframes sk { to { background-position: -200% 0; } }
+
+/* top bar, sidebar */
+.topbar { display: flex; align-items: center; gap: var(--s-4); height: 56px; padding: 0 var(--s-5);
+  background: var(--c-surface); border-bottom: 1px solid var(--c-border); }
+.sidebar { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--r-lg); }
+.wordmark { display: inline-flex; align-items: center; gap: 10px; font-weight: 600; font-size: 15px; letter-spacing: -.01em; color: var(--c-text); }
+.wordmark i { width: 22px; height: 22px; border-radius: 6px; background: var(--c-accent); display: inline-block; position: relative; }
+.wordmark i::after { content: ""; position: absolute; inset: 6px; border: 2px solid var(--c-on-accent); border-radius: 50%; }
+
+/* privacy strip */
+.privacy { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: var(--fs-xs); color: var(--c-muted); }
+.privacy svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
+
+/* mascot: black artwork, so it lives in a dark tile on light pages */
+.mascot-tile { background: #0d0f14; border-radius: var(--r-lg); display: inline-grid; place-items: center; padding: 6px; }
+.mascot-tile img { mix-blend-mode: screen; display: block; }
+
+/* print */
+@media print {
+  :root { --c-bg: #fff; }
+  body { background: #fff !important; }
+  header button, .picker, .noprint, .btn { display: none !important; }
+  .panel, .card, .kpi { box-shadow: none !important; break-inside: avoid; }
+}

@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Super Archilles Stage</title>
+<!-- Audience screen. Fully self-contained: no CDN, no web fonts, works offline. -->
+<link rel="stylesheet" href="/static/theme.css">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); overflow: hidden; }
+  body { font: 16px/1.4 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; cursor: none; }
+  body.mouse { cursor: default; }
+
+  .layer { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+           opacity: 0; transition: opacity .7s ease; }
+  .layer.in { opacity: 1; }
+
+  /* 16:9 box, as large as the viewport allows */
+  .box { position: relative; width: min(100vw, 177.78vh); height: min(100vh, 56.25vw); overflow: hidden; }
+  .box iframe { position: absolute; top: 0; left: 0; width: 1920px; height: 1080px; border: 0;
+                transform-origin: 0 0; pointer-events: none; background: var(--bg); }
+
+  .img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; display: block; }
+  .img-bg { position: absolute; inset: -40px; width: calc(100% + 80px); height: calc(100% + 80px); object-fit: cover;
+            filter: blur(40px) brightness(.35); }
+  .cap { position: absolute; left: 0; right: 0; bottom: 0; padding: 4vh 5vw 4vh;
+         background: linear-gradient(transparent, rgba(0,0,0,.75)); font-size: clamp(18px, 3.2vh, 40px);
+         font-weight: 700; text-shadow: 0 2px 12px rgba(0,0,0,.6); }
+
+  .text { width: 100%; height: 100%; padding: 9vh 8vw; display: flex; flex-direction: column; justify-content: center;
+          gap: 4vh; overflow: hidden; }
+  .kicker { font-size: clamp(14px, 2.2vh, 26px); text-transform: uppercase; letter-spacing: .16em; color: var(--green);
+            font-weight: 700; }
+  .q { font-size: clamp(28px, 7vh, 96px); font-weight: 800; line-height: 1.1; letter-spacing: -.01em;
+       overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+  .a { font-size: clamp(20px, 4vh, 54px); line-height: 1.35; color: var(--c-text-2); border-left: 6px solid var(--green);
+       padding-left: 3vw; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 7;
+       -webkit-box-orient: vertical; overflow: hidden; white-space: pre-line; }
+  .h { font-size: clamp(28px, 6.5vh, 84px); font-weight: 800; line-height: 1.1; overflow-wrap: anywhere; }
+  ul.pts { list-style: none; margin: 0; padding: 0; display: grid; gap: 2.4vh; overflow: hidden; }
+  ul.pts li { font-size: clamp(20px, 4.2vh, 56px); line-height: 1.25; padding-left: 2.2em; position: relative;
+              overflow-wrap: anywhere; }
+  ul.pts li::before { content: ""; position: absolute; left: .5em; top: .45em; width: .45em; height: .45em;
+                      border-radius: 50%; background: var(--green); }
+  ul.pts.many li { font-size: clamp(18px, 3.2vh, 42px); }
+
+  /* idle */
+  .idle { flex-direction: column; align-items: center; gap: 3vh; text-align: center; padding: 0 8vw; }
+  .idle .mark { width: 9vh; height: 9vh; border-radius: 50%; border: 3px solid var(--green);
+                
+                animation: breathe 5s ease-in-out infinite; }
+  @keyframes breathe { 0%, 100% { transform: scale(.92); opacity: .7; } 50% { transform: scale(1); opacity: 1; } }
+  .idle .talk { font-size: clamp(32px, 9vh, 120px); font-weight: 800; letter-spacing: -.01em; line-height: 1.05;
+                overflow-wrap: anywhere; }
+  .idle .sub { font-size: clamp(14px, 2.6vh, 30px); color: var(--dim); }
+  .foot { position: fixed; left: 0; right: 0; bottom: 3.5vh; text-align: center; color: var(--c-faint);
+          font-size: clamp(12px, 1.9vh, 22px); letter-spacing: .04em; transition: opacity .7s ease; }
+  .foot b { color: var(--green); font-weight: 700; }
+  .foot.away { opacity: 0; }
+  .conn { position: fixed; top: 12px; right: 14px; width: 8px; height: 8px; border-radius: 50%;
+          background: #ff4d4f; opacity: 0; transition: opacity .4s; }
+  .conn.down { opacity: .8; }
+
+  /* ---- Archilles theme layer ---- */
+  .kicker { color: var(--c-accent); font-weight: 600; letter-spacing: .1em; }
+  .q, .h { font-weight: 650; letter-spacing: -.02em; }
+  .a { border-left: 4px solid var(--c-accent); }
+  ul.pts li::before { background: var(--c-accent); border-radius: 2px; }
+  .idle .mark { border: 0; width: 7vh; height: 7vh; border-radius: 18%; background: var(--c-accent); animation: none; position: relative; }
+  .idle .mark::after { content: ""; position: absolute; inset: 28%; border: .7vh solid var(--c-on-accent); border-radius: 50%; }
+  .idle .talk { font-weight: 650; letter-spacing: -.02em; }
+  .foot .ondevice { font-size: clamp(12px, 1.6vh, 18px); height: auto; padding: .5em 1em; }
+  .conn { background: var(--c-bad); }
+</style>
+</head>
+<body>
+<div class="foot" id="foot"><span class="ondevice">On-device · GB10</span></div>
+<div class="conn" id="conn" title="Reconnecting"></div>
+<script>
+(() => {
+  const foot = document.getElementById("foot");
+  const conn = document.getElementById("conn");
+  let talkName = "";
+  let currentKey = undefined; // card id, or "" for idle
+  let currentLayer = null;
+
+  const el = (tag, cls, text) => {
+    const n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text; // textContent escapes everything
+    return n;
+  };
+
+  function frameDoc(html) {
+    return "<!doctype html><html><head><meta charset=\"utf-8\"><style>@font-face{font-family:Inter;src:url(" + location.origin + "/static/inter.woff2) format(\"woff2\");font-weight:100 900}html,body{margin:0;width:1920px;height:1080px;" +
+      "overflow:hidden;background:#0b0d10;color:#e8eaed;font-family:Inter,ui-sans-serif,system-ui,sans-serif}</style></head><body>" +
+      html + "</body></html>";
+  }
+
+  function fit() {
+    document.querySelectorAll(".box").forEach((b) => {
+      const f = b.querySelector("iframe");
+      if (f) f.style.transform = `scale(${b.clientWidth / 1920})`;
+    });
+  }
+  addEventListener("resize", fit);
+
+  function points(body) {
+    return String(body || "").split(/\n+/)
+      .map((s) => s.replace(/^\s*(?:[-*•]|\d+[.)])\s*/, "").trim())
+      .filter(Boolean);
+  }
+
+  function renderCard(c) {
+    const box = el("div", "box");
+    if (c.html) {
+      const f = document.createElement("iframe");
+      f.setAttribute("sandbox", "");
+      f.setAttribute("tabindex", "-1");
+      f.srcdoc = frameDoc(c.html);
+      box.append(f);
+    } else if (c.image) {
+      const bg = el("img", "img-bg"); bg.src = c.image; bg.alt = "";
+      const img = el("img", "img"); img.src = c.image; img.alt = c.title || "";
+      box.append(bg, img);
+      if (c.title) box.append(el("div", "cap", c.title));
+    } else if (c.kind === "qa") {
+      const t = el("div", "text");
+      t.append(el("div", "kicker", "Question"), el("div", "q", c.title || ""));
+      if (c.body) t.append(el("div", "a", c.body));
+      box.append(t);
+    } else {
+      const t = el("div", "text");
+      if (c.title) t.append(el("div", "h", c.title));
+      const pts = points(c.body);
+      if (pts.length) {
+        const ul = el("ul", "pts" + (pts.length > 5 ? " many" : ""));
+        pts.slice(0, 8).forEach((p) => ul.append(el("li", null, p)));
+        t.append(ul);
+      }
+      box.append(t);
+    }
+    return box;
+  }
+
+  function renderIdle() {
+    const wrap = el("div", "idle");
+    wrap.style.display = "flex";
+    wrap.append(el("div", "mark"));
+    wrap.append(el("div", "talk", talkName || "Super Archilles"));
+    if (!talkName) wrap.append(el("div", "sub", "Waiting for the session to begin"));
+    return wrap;
+  }
+
+  function show(card) {
+    const key = card ? card.id : "";
+    if (key === currentKey && !(key === "" && currentLayer && currentLayer.dataset.name !== talkName)) return;
+    currentKey = key;
+    const layer = el("div", "layer");
+    layer.dataset.name = talkName;
+    layer.append(card ? renderCard(card) : renderIdle());
+    document.body.append(layer);
+    fit();
+    foot.classList.toggle("away", !!card);
+    const old = currentLayer;
+    currentLayer = layer;
+    requestAnimationFrame(() => requestAnimationFrame(() => layer.classList.add("in")));
+    if (old) {
+      old.classList.remove("in");
+      const drop = () => old.remove();
+      old.addEventListener("transitionend", drop, { once: true });
+      setTimeout(drop, 1200);
+    }
+  }
+
+  async function refresh() {
+    try {
+      const r = await fetch("/stage/current");
+      if (r.ok) { show((await r.json()).card || null); return; }
+    } catch {}
+    if (currentKey === undefined) show(null);
+  }
+
+  function connect() {
+    const ws = new WebSocket(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/events`);
+    ws.onopen = () => { conn.classList.remove("down"); refresh(); };
+    ws.onmessage = (e) => {
+      let ev; try { ev = JSON.parse(e.data); } catch { return; }
+      if (ev.type === "start") {
+        talkName = ev.name || "";
+        // A fresh start clears the stage on the server; a reconnect snapshot carries elapsed.
+        if (!ev.elapsed || currentKey === "") show(null);
+      } else if (ev.type === "stage") {
+        show(ev.card || null);
+      }
+    };
+    ws.onclose = () => { conn.classList.add("down"); setTimeout(connect, 1000); };
+  }
+
+  let mouseT = null;
+  addEventListener("mousemove", () => {
+    document.body.classList.add("mouse");
+    clearTimeout(mouseT); mouseT = setTimeout(() => document.body.classList.remove("mouse"), 2000);
+  });
+
+  refresh();
+  connect();
+})();
+</script>
+</body>
+</html>

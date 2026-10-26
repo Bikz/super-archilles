@@ -1,0 +1,392 @@
+{
+  "runId": "b1cac1dd-550a-4ad0-b5a9-3d83b3609067",
+  "status": "ok",
+  "summary": "completed",
+  "result": {
+    "payloads": [
+      {
+        "text": "Your last pitch ran 1:05 against a 4:00 plan, so 2:54 under. You never reached the GB10 section or the close, and you opened without your hook about speakers drifting and running over time, which cost you attention before you explained what the copilot does. I nudged you twice.\n\nNo, you do not run over. Across your last 5 talks you are under by about 2:30 on average.",
+        "mediaUrl": null
+      }
+    ],
+    "meta": {
+      "durationMs": 13165,
+      "agentMeta": {
+        "sessionId": "evaljson1",
+        "sessionFile": "agent:main:explicit:evaljson1",
+        "provider": "inference",
+        "model": "local",
+        "contextTokens": 131072,
+        "contextTokensSource": "resolved",
+        "agentHarnessId": "openclaw",
+        "credentialSource": {
+          "kind": "direct",
+          "evidence": "provider-config",
+          "authorization": "declared"
+        },
+        "usage": {
+          "input": 1651,
+          "output": 395,
+          "cacheRead": 30265,
+          "total": 32311,
+          "cost": {
+            "total": 0
+          }
+        },
+        "lastCallUsage": {
+          "input": 532,
+          "output": 159,
+          "cacheRead": 10661,
+          "cacheWrite": 0,
+          "cost": {
+            "total": 0
+          },
+          "total": 11352
+        },
+        "promptTokens": 11193,
+        "contextBudgetStatus": {
+          "schemaVersion": 1,
+          "source": "pre-prompt-estimate",
+          "updatedAt": 1792965544865,
+          "provider": "inference",
+          "model": "local",
+          "route": "fits",
+          "shouldCompact": false,
+          "estimatedPromptTokens": 9729,
+          "contextTokenBudget": 131072,
+          "promptBudgetBeforeReserve": 111072,
+          "reserveTokens": 20000,
+          "effectiveReserveTokens": 20000,
+          "remainingPromptBudgetTokens": 101343,
+          "overflowTokens": 0,
+          "toolResultReducibleChars": 0,
+          "messageCount": 0,
+          "unwindowedMessageCount": 0,
+          "sessionId": "evaljson1"
+        },
+        "codeModeEngaged": false,
+        "assistantTurns": 3,
+        "bridgeCalls": {
+          "search": 0,
+          "describe": 0,
+          "call": 0
+        },
+        "costUsd": 0,
+        "terminalReceipt": {
+          "runId": "b1cac1dd-550a-4ad0-b5a9-3d83b3609067",
+          "sessionId": "evaljson1",
+          "turnId": "b1cac1dd-550a-4ad0-b5a9-3d83b3609067",
+          "requested": {
+            "provider": "inference",
+            "model": "local"
+          },
+          "effective": {
+            "provider": "inference",
+            "model": "local",
+            "responseModel": "local"
+          },
+          "successfulToolNames": [
+            "read",
+            "exec"
+          ],
+          "rerouted": false
+        }
+      },
+      "aborted": false,
+      "systemPromptReport": {
+        "source": "run",
+        "generatedAt": 1792965544839,
+        "sessionId": "evaljson1",
+        "sessionKey": "agent:main:explicit:evaljson1",
+        "provider": "inference",
+        "model": "local",
+        "workspaceDir": "/sandbox/.openclaw/workspace",
+        "bootstrapMaxChars": 20000,
+        "bootstrapTotalMaxChars": 60000,
+        "bootstrapTruncation": {
+          "warningMode": "always",
+          "warningShown": false,
+          "truncatedFiles": 0,
+          "nearLimitFiles": 0,
+          "totalNearLimit": false
+        },
+        "sandbox": {
+          "mode": "off",
+          "sandboxed": false
+        },
+        "systemPrompt": {
+          "chars": 32250,
+          "hash": "33545cd1edb8b86b30df90bee415c7896960cf73e1c3f5ae19bde0588b7d9dae",
+          "projectContextChars": 11158,
+          "nonProjectContextChars": 21092
+        },
+        "injectedWorkspaceFiles": [
+          {
+            "name": "AGENTS.md",
+            "path": "/sandbox/.openclaw/workspace/AGENTS.md",
+            "missing": false,
+            "rawChars": 7927,
+            "injectedChars": 7927,
+            "truncated": false
+          },
+          {
+            "name": "SOUL.md",
+            "path": "/sandbox/.openclaw/workspace/SOUL.md",
+            "missing": false,
+            "rawChars": 682,
+            "injectedChars": 682,
+            "truncated": false
+          },
+          {
+            "name": "IDENTITY.md",
+            "path": "/sandbox/.openclaw/workspace/IDENTITY.md",
+            "missing": false,
+            "rawChars": 1276,
+            "injectedChars": 1276,
+            "truncated": false
+          },
+          {
+            "name": "USER.md",
+            "path": "/sandbox/.openclaw/workspace/USER.md",
+            "missing": false,
+            "rawChars": 871,
+            "injectedChars": 871,
+            "truncated": false
+          },
+          {
+            "name": "BOOTSTRAP.md",
+            "path": "/sandbox/.openclaw/workspace/BOOTSTRAP.md",
+            "missing": true,
+            "rawChars": 0,
+            "injectedChars": 0,
+            "truncated": false
+          }
+        ],
+        "skills": {
+          "promptChars": 7519,
+          "hash": "8d6ec2a2ddac4e64d022229ef9bb9d12b7bae5339e7ccb63e333410b16f04bb1",
+          "entries": [
+            {
+              "name": "add-model-provider",
+              "blockChars": 324
+            },
+            {
+              "name": "browser-automation",
+              "blockChars": 324
+            },
+            {
+              "name": "canvas",
+              "blockChars": 243
+            },
+            {
+              "name": "clawhub",
+              "blockChars": 327
+            },
+            {
+              "name": "cloud-image-bake",
+              "blockChars": 310
+            },
+            {
+              "name": "configure-channel",
+              "blockChars": 312
+            },
+            {
+              "name": "control-ui",
+              "blockChars": 363
+            },
+            {
+              "name": "diagnose-gateway",
+              "blockChars": 304
+            },
+            {
+              "name": "diagram-maker",
+              "blockChars": 289
+            },
+            {
+              "name": "healthcheck",
+              "blockChars": 301
+            },
+            {
+              "name": "mcporter",
+              "blockChars": 289
+            },
+            {
+              "name": "meme-maker",
+              "blockChars": 274
+            },
+            {
+              "name": "node-connect",
+              "blockChars": 358
+            },
+            {
+              "name": "node-inspect-debugger",
+              "blockChars": 300
+            },
+            {
+              "name": "notion",
+              "blockChars": 295
+            },
+            {
+              "name": "python-debugpy",
+              "blockChars": 288
+            },
+            {
+              "name": "skill-creator",
+              "blockChars": 307
+            },
+            {
+              "name": "spike",
+              "blockChars": 274
+            },
+            {
+              "name": "talk-copilot",
+              "blockChars": 378
+            },
+            {
+              "name": "taskflow",
+              "blockChars": 304
+            },
+            {
+              "name": "taskflow-inbox-triage",
+              "blockChars": 314
+            },
+            {
+              "name": "tmux",
+              "blockChars": 292
+            },
+            {
+              "name": "weather",
+              "blockChars": 312
+            }
+          ]
+        },
+        "tools": {
+          "listChars": 0,
+          "schemaChars": 5159,
+          "entries": [
+            {
+              "name": "read",
+              "summaryChars": 164,
+              "summaryHash": "d136f5b09e28d671addad4ca800b75b8aa6a36002bc739ead964f618d3e34829",
+              "schemaChars": 481,
+              "schemaHash": "b1b9b637dfe1dfade40f50c37cf840a298f1992b534cb9425b7470233a6b0cbb",
+              "propertiesCount": 5
+            },
+            {
+              "name": "edit",
+              "summaryChars": 130,
+              "summaryHash": "4149500b1f6501ec6450e4c048bdb6844764dd4a888a10846726cbbc7256152e",
+              "schemaChars": 501,
+              "schemaHash": "adf3140833ca927b84c66c989d6833fdcbd9de011dd2ffc59f9a2c4d3c25f127",
+              "propertiesCount": 2
+            },
+            {
+              "name": "write",
+              "summaryChars": 49,
+              "summaryHash": "f9ce3d8ac929a51498c03331b97c59bfaa2bb4d25580a5ddf0102e6a8e173aec",
+              "schemaChars": 191,
+              "schemaHash": "b61d2da23febf5fbda55e391526f36d283e9e9fb7f1a1dbadcf5c618a0632287",
+              "propertiesCount": 2
+            },
+            {
+              "name": "apply_patch",
+              "summaryChars": 71,
+              "summaryHash": "5c1173efe93d080a386a23216bc3e58db2e0033eb3ddea697eb2439938b7cae4",
+              "schemaChars": 153,
+              "schemaHash": "05521268363ff4f191472c90d69ef08a503ba9acf1d2febc50b3ee68db32ab65",
+              "propertiesCount": 1
+            },
+            {
+              "name": "exec",
+              "summaryChars": 366,
+              "summaryHash": "6a41ebbc7cd1fae376a497c1bb1662c40a5faa87e5f811bff3ae37e04fb20973",
+              "schemaChars": 1240,
+              "schemaHash": "bff33ce76324bb7295ff12774d2eca451da2b31d355798ffae37c5bdb9a1fbe4",
+              "propertiesCount": 12
+            },
+            {
+              "name": "process",
+              "summaryChars": 190,
+              "summaryHash": "75fd9c7b8d560599081ab2621e4f897babc118254cf439bd8329a60a905a9ef1",
+              "schemaChars": 1164,
+              "schemaHash": "6cf3281369349e15ea532e644c8ec7f94c96fa6a4e3287272c8cfe90b0960516",
+              "propertiesCount": 12
+            },
+            {
+              "name": "sessions_yield",
+              "summaryChars": 181,
+              "summaryHash": "1a6f218bea29a4cb742605d09f114443b3b3a55f1644338a65f0a4cc6bbc1acb",
+              "schemaChars": 259,
+              "schemaHash": "affee0fae7ad36a16fa1e339d4fe9e1e80351178f1023af65e3d1240f700935d",
+              "propertiesCount": 2
+            },
+            {
+              "name": "tool_search",
+              "summaryChars": 448,
+              "summaryHash": "d3d55a4969277093bef83f9a2f7963312c345f080fc37a0a2e7b71cede8a842b",
+              "schemaChars": 835,
+              "schemaHash": "1f76c0814ad91eaf2f0785f65bfc7648584920a86f847ff0764e2e9e7ea6264c",
+              "propertiesCount": 3
+            },
+            {
+              "name": "tool_describe",
+              "summaryChars": 92,
+              "summaryHash": "fc74d14dc28e4026dba1a8904339a6bef1ce8118588e0bff809c37be73ce7a02",
+              "schemaChars": 125,
+              "schemaHash": "8b60055097c87990f29b27c1f82ecea48435ffb1163c486121a2189f118aa0a4",
+              "propertiesCount": 1
+            },
+            {
+              "name": "tool_call",
+              "summaryChars": 61,
+              "summaryHash": "0dc569a573cbc94928d868c94a178930879ac898b541cd9009338699a3e7d1fd",
+              "schemaChars": 210,
+              "schemaHash": "f48bfb0705c11b32ccbdfd456b791ce458604b1f51b1e31f61bc2d7b25ae07b9",
+              "propertiesCount": 2
+            }
+          ]
+        },
+        "currentTurn": {
+          "promptChars": 51,
+          "runtimeContextChars": 0,
+          "modelOnlyPromptChars": 0
+        }
+      },
+      "finalPromptText": "How did my last talk go, and do I usually run over?",
+      "finalAssistantVisibleText": "Your last pitch ran 1:05 against a 4:00 plan, so 2:54 under. You never reached the GB10 section or the close, and you opened without your hook about speakers drifting and running over time, which cost you attention before you explained what the copilot does. I nudged you twice.\n\nNo, you do not run over. Across your last 5 talks you are under by about 2:30 on average.",
+      "finalAssistantRawText": "Your last pitch ran 1:05 against a 4:00 plan, so 2:54 under. You never reached the GB10 section or the close, and you opened without your hook about speakers drifting and running over time, which cost you attention before you explained what the copilot does. I nudged you twice.\n\nNo, you do not run over. Across your last 5 talks you are under by about 2:30 on average.",
+      "replayInvalid": true,
+      "livenessState": "working",
+      "stopReason": "stop",
+      "executionTrace": {
+        "winnerProvider": "inference",
+        "winnerModel": "local",
+        "attempts": [
+          {
+            "provider": "inference",
+            "model": "local",
+            "result": "success",
+            "stage": "assistant"
+          }
+        ],
+        "fallbackUsed": false,
+        "runner": "embedded"
+      },
+      "requestShaping": {
+        "thinking": "off"
+      },
+      "completion": {
+        "stopReason": "stop",
+        "finishReason": "stop"
+      },
+      "toolSummary": {
+        "calls": 3,
+        "tools": [
+          "read",
+          "exec"
+        ],
+        "failures": 0
+      }
+    }
+  }
+}

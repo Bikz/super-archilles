@@ -1,0 +1,9 @@
+name: plain-style
+version: 0.1.0
+description: "House style for Super Archilles replies: no em or en dashes."
+author: GB10 hackathon team
+kind: standalone
+platforms:
+  - linux
+provides_hooks:
+  - transform_llm_output

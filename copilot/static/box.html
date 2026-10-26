@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Super Archilles Console</title>
+<!-- Fully self-contained: no CDN, no fonts, so it keeps rendering with the internet off. -->
+<link rel="stylesheet" href="/static/theme.css">
+<style>
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--text); overflow: hidden;
+         font: 16px/1.4 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .app { height: 100vh; display: grid; grid-template-rows: auto 1fr auto; gap: 14px; padding: 18px 22px; }
+
+  header { display: flex; align-items: center; gap: 18px; }
+  .brand { font-size: 26px; font-weight: 800; letter-spacing: .01em; }
+  .brand span { color: var(--green); }
+  .sub { color: var(--dim); font-size: 15px; }
+  .pill { margin-left: auto; padding: 10px 22px; border-radius: 99px; font-weight: 800; font-size: 20px;
+          letter-spacing: .05em; text-transform: uppercase; transition: all .3s; }
+  .pill.online { background: var(--c-accent-soft); color: var(--green); border: 1px solid var(--c-accent-line); }
+  .pill.offline { background: var(--green); color: var(--c-on-accent); 
+                  animation: glow 1.6s ease-in-out infinite; }
+  @keyframes glow { 50% {  } }
+  .session { color: var(--dim); font-size: 15px; text-align: right; min-width: 180px; }
+  .session b { color: var(--text); font-size: 22px; font-variant-numeric: tabular-nums; }
+
+  main { display: grid; grid-template-columns: 1.25fr 0.72fr 1fr; gap: 14px; min-height: 0; }
+  .col { display: grid; gap: 14px; min-height: 0; }
+  .left { grid-template-rows: 0.62fr 1.6fr; }
+  .right { grid-template-rows: auto auto auto 1fr; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px;
+           min-height: 0; display: flex; flex-direction: column; }
+  .label { font-size: 12px; text-transform: uppercase; letter-spacing: .1em; color: var(--dim);
+           margin-bottom: 8px; display: flex; justify-content: space-between; gap: 10px; }
+  .label .tag { color: var(--green); letter-spacing: .04em; text-transform: none; font-size: 12px; }
+
+  .hearing { font-size: 23px; line-height: 1.35; overflow: hidden; display: flex; flex-direction: column;
+             justify-content: flex-end; flex: 1; color: #d6dae0; }
+  .hearing .fresh { color: white; }
+  .idle { color: var(--dim); font-size: 20px; }
+
+  .log { overflow: hidden; flex: 1; display: flex; flex-direction: column; justify-content: flex-end;
+         font: 15px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: #050608;
+         border-radius: 8px; padding: 8px 10px; border: 1px solid #161a1f; }
+  .ln { display: grid; grid-template-columns: 74px 92px 1fr; gap: 10px; white-space: pre-wrap; word-break: break-word;
+        animation: fadein .25s ease-out; }
+  .ln .t { color: #4b535d; font-variant-numeric: tabular-nums; }
+  .ln .k { font-weight: 700; }
+  .ln .m { color: var(--c-text-2); }
+  .ln .m b { color: white; font-weight: 700; }
+  .ln.hl .m { font-size: 19px; font-weight: 700; }
+  @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
+  .k.session { color: #8a929e; } .k.asr { color: #4da3ff; } .k.coach { color: #4da3ff; }
+  .k.llm { color: #76b900; } .k.decide { color: #e8eaed; } .k.nudge { color: #f5a623; }
+  .k.telegram { color: #5eb5f7; } .k.library { color: #b07cff; } .k.net { color: #ff4d4f; }
+  .k.error { color: #ff4d4f; } .k.debrief { color: #8a929e; }
+  .k.card { color: #e0a8ff; }
+  .k.prep { color: #76b900; }
+  .s-on_track { color: #76b900; } .s-valuable_tangent { color: #b07cff; } .s-drifting { color: #f5a623; }
+  .s-behind { color: #ff4d4f; } .s-wrapping_up { color: #4da3ff; }
+  .cursor::after { content: "▍"; color: #76b900; animation: blink 1s steps(2) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  .metric { display: grid; grid-template-columns: 170px 1fr; gap: 14px; align-items: center; }
+  .big { font-size: 40px; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; }
+  .big small { font-size: 16px; color: var(--dim); font-weight: 500; }
+  .metric .cap { color: var(--dim); font-size: 13px; margin-top: 4px; }
+  canvas { width: 100%; height: 74px; display: block; }
+
+  .membar { height: 34px; border-radius: 8px; background: #0c0f12; border: 1px solid var(--line);
+            display: flex; overflow: hidden; margin-top: 4px; }
+  .membar div { height: 100%; transition: flex-grow .6s; display: flex; align-items: center; padding: 0 8px;
+                font-size: 12px; font-weight: 700; white-space: nowrap; overflow: hidden; color: var(--c-on-accent); }
+  .legend { display: flex; justify-content: space-between; color: var(--dim); font-size: 13px; margin-top: 6px; }
+
+  .net { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .models { display: grid; gap: 10px; align-content: start; overflow: hidden; }
+  .model { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; padding: 8px 10px;
+           background: #0c0f12; border-radius: 8px; border: 1px solid var(--line); }
+  .model .role { color: var(--dim); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }
+  .model .name { font-weight: 700; font-size: 17px; }
+  .model .gb { grid-row: span 2; align-self: center; font-size: 22px; font-weight: 800; color: var(--green); }
+  .model .where { color: var(--dim); font-size: 13px; font-family: ui-monospace, Menlo, monospace; }
+
+  .phone { background: #0e1621; border: 1px solid #1c2733; border-radius: 22px; padding: 0; overflow: hidden; }
+  .phone .bar { display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: #17212b; border-bottom: 1px solid #0b121a; }
+  .avatar { width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg, #76b900, #2f7d32);
+            display: grid; place-items: center; font-weight: 800; color: var(--c-on-accent); font-size: 18px; flex: none; }
+  .phone .who { font-weight: 700; font-size: 17px; }
+  .phone .who small { display: block; color: #6c8eab; font-weight: 400; font-size: 13px; }
+  .chat { flex: 1; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; gap: 8px;
+          padding: 14px 12px; background: #0e1621; }
+  .bubble { max-width: 92%; background: #182533; border-radius: 14px 14px 14px 4px; padding: 8px 12px 6px;
+            font-size: 16px; line-height: 1.35; white-space: pre-wrap; animation: rise .35s ease-out; }
+  .bubble .when { display: block; text-align: right; color: #6c8eab; font-size: 11px; margin-top: 2px; }
+  .bubble.queued { border: 1px dashed var(--amber); }
+  .bubble.queued .when { color: var(--amber); }
+  .bubble.nudge { background: #2b2412; }
+  @keyframes rise { from { transform: translateY(12px); opacity: 0; } to { transform: none; opacity: 1; } }
+  .chat .idle { text-align: center; }
+
+  footer { display: flex; gap: 26px; color: var(--dim); font-size: 15px; align-items: center; }
+  footer b { color: var(--green); }
+  footer .clock { margin-left: auto; font-variant-numeric: tabular-nums; }
+
+  /* ---- Archilles theme layer (dark console) ---- */
+  .brand.wordmark { font-size: 17px; font-weight: 600; letter-spacing: -.01em; gap: 10px; }
+  .brand .sub { color: var(--c-muted); font-weight: 400; font-size: 15px; }
+  .brand .ondevice { margin-left: 8px; }
+  .pill { font-size: 13px; font-weight: 600; padding: 6px 14px; letter-spacing: 0; text-transform: none; display: inline-flex; align-items: center; gap: 8px; }
+  .pill::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+  .pill.online { background: var(--c-surface); color: var(--c-ok); border: 1px solid var(--c-border); }
+  .pill.offline { background: var(--c-surface); color: var(--c-warn); border: 1px solid var(--c-border); animation: none; }
+  .session b { font-weight: 600; }
+  .panel { box-shadow: var(--shadow); }
+  .label { font-size: 11px; font-weight: 600; letter-spacing: .06em; }
+  .label .tag { color: var(--c-muted); font-weight: 400; }
+  .hearing { color: var(--c-text-2); font-size: 20px; }
+  .hearing .fresh { color: var(--c-text); }
+  .log { background: var(--c-sunken); border-color: var(--c-border); font-size: 13px; }
+  .ln { grid-template-columns: 64px 80px 1fr; }
+  .ln .t { color: var(--c-faint); }
+  .ln .k { font-weight: 600; min-width: 0; text-align: left; font-size: 12px; }
+  .ln .m b { color: var(--c-text); }
+  .ln.hl .m { font-size: 15px; font-weight: 600; }
+  .k.session, .k.debrief, .k.decide { color: var(--c-muted); } .k.asr, .k.coach, .k.telegram { color: var(--c-info); }
+  .k.llm, .k.prep { color: var(--c-accent); } .k.nudge { color: var(--c-warn); } .k.library, .k.card { color: var(--c-tangent); }
+  .k.net, .k.error { color: var(--c-bad); }
+  .s-on_track { color: var(--c-ok); } .s-valuable_tangent { color: var(--c-tangent); } .s-drifting { color: var(--c-warn); }
+  .s-behind { color: var(--c-bad); } .s-wrapping_up { color: var(--c-info); }
+  .cursor::after { color: var(--c-accent); }
+  .big { font-weight: 600; letter-spacing: -.02em; font-size: 34px; }
+  .membar, .model { background: var(--c-sunken); }
+  .membar div { font-weight: 600; }
+  .model .gb { font-weight: 600; color: var(--c-text); font-variant-numeric: tabular-nums; }
+  .model .name { font-weight: 600; font-size: 15px; }
+  .phone { background: var(--c-surface); border-color: var(--c-border); border-radius: var(--r-lg); }
+  .phone .bar { background: var(--c-surface-2); border-bottom-color: var(--c-border); }
+  .avatar { background: var(--c-accent); color: var(--c-on-accent); font-weight: 600; }
+  .phone .who { font-weight: 600; }
+  .phone .who small { color: var(--c-muted); }
+  .chat { background: var(--c-surface); }
+  .bubble { background: var(--c-surface-2); border: 1px solid var(--c-border); font-size: 14px; }
+  .bubble .when { color: var(--c-faint); }
+  .bubble.nudge { background: var(--c-accent-soft); border-color: var(--c-accent-line); }
+  footer { font-size: 13px; gap: 22px; }
+  footer .trust { display: inline-flex; align-items: center; gap: 6px; }
+  footer b { color: var(--c-text); font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div>
+      <div class="brand wordmark"><i></i>Super Archilles <span class="sub">Console</span> <span class="ondevice">On-device · GB10</span></div>
+    </div>
+    <div class="session" id="session">No session running</div>
+    <div class="pill online" id="pill">Online</div>
+  </header>
+
+  <main>
+    <div class="col left">
+      <section class="panel">
+        <div class="label">Hearing <span class="tag" id="asrTag">Nemotron 3.5 ASR, streaming on GPU</span></div>
+        <div class="hearing" id="hearing"><div class="idle">Waiting for a session.</div></div>
+      </section>
+      <section class="panel">
+        <div class="label">Audit log <span class="tag" id="llmTag">local LLM</span></div>
+        <div class="log" id="log"></div>
+      </section>
+    </div>
+
+    <section class="panel phone">
+      <div class="bar">
+        <div class="avatar">A</div>
+        <div class="who">Super Archilles<small id="tgSub">bot, Telegram group</small></div>
+      </div>
+      <div class="chat" id="chat"><div class="idle">No messages sent.</div></div>
+    </section>
+
+    <div class="col right">
+      <section class="panel">
+        <div class="label">GPU <span class="tag" id="gpuTag"></span></div>
+        <div class="metric">
+          <div><div class="big" id="power">0<small> W</small></div><div class="cap">power draw</div></div>
+          <canvas id="powerChart"></canvas>
+        </div>
+        <div class="metric" style="margin-top:10px">
+          <div><div class="big" id="util">0<small> %</small></div><div class="cap">utilization</div></div>
+          <canvas id="utilChart"></canvas>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="label">Unified memory <span class="tag" id="memTag"></span></div>
+        <div class="membar" id="membar"></div>
+        <div class="legend"><span id="memUsed"></span><span id="memTotal"></span></div>
+      </section>
+
+      <section class="panel">
+        <div class="label">Network out <span class="tag" id="netTag"></span></div>
+        <div class="net">
+          <div><div class="big" id="txRate">0<small> KB/s</small></div><div class="cap">leaving this box</div></div>
+          <canvas id="netChart"></canvas>
+        </div>
+        <div class="cap" id="tgState" style="color:var(--dim);font-size:13px;margin-top:6px"></div>
+      </section>
+
+      <section class="panel">
+        <div class="label">Models loaded on this box</div>
+        <div class="models" id="models"></div>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    <span class="trust"><svg class="ico" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Audio sent off device <b>0 bytes</b></span>
+    <span class="trust">Cloud AI calls <b>0</b></span>
+    <span class="trust">Audio stored <b>This device only</b></span>
+    <span id="llmEndpoint"></span>
+    <span class="clock" id="clock"></span>
+  </footer>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const fmt = (s) => { s = Math.max(0, Math.floor(s)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; };
+const HIST = 120;
+const series = { power: [], util: [], tx: [] };
+let session = null, t0 = 0, thinkingEl = null, hearingText = "";
+
+function push(arr, v) { arr.push(v); if (arr.length > HIST) arr.shift(); }
+
+function chart(id, data, color, max) {
+  const c = $(id), dpr = window.devicePixelRatio || 1;
+  const w = c.clientWidth, h = c.clientHeight;
+  if (c.width !== w * dpr) { c.width = w * dpr; c.height = h * dpr; }
+  const g = c.getContext("2d");
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.clearRect(0, 0, w, h);
+  g.strokeStyle = "#262b37"; g.lineWidth = 1;
+  for (let i = 1; i < 4; i++) { g.beginPath(); g.moveTo(0, (h * i) / 4); g.lineTo(w, (h * i) / 4); g.stroke(); }
+  if (data.length < 2) return;
+  const top = Math.max(max, ...data) || 1;
+  const x = (i) => w - ((data.length - 1 - i) / (HIST - 1)) * w;
+  const y = (v) => h - 2 - (v / top) * (h - 6);
+  g.beginPath(); g.moveTo(x(0), h);
+  data.forEach((v, i) => g.lineTo(x(i), y(v)));
+  g.lineTo(x(data.length - 1), h); g.closePath();
+  g.fillStyle = color + "33"; g.fill();
+  g.beginPath(); data.forEach((v, i) => (i ? g.lineTo(x(i), y(v)) : g.moveTo(x(i), y(v))));
+  g.strokeStyle = color; g.lineWidth = 2; g.stroke();
+}
+
+function rate(bps) {
+  if (bps < 1024) return [Math.round(bps), "B/s"];
+  if (bps < 1024 * 1024) return [(bps / 1024).toFixed(1), "KB/s"];
+  return [(bps / 1048576).toFixed(1), "MB/s"];
+}
+
+function stats(ev) {
+  push(series.power, ev.power_w || 0); push(series.util, ev.gpu_util || 0); push(series.tx, ev.net_tx_bps || 0);
+  $("power").innerHTML = `${Math.round(ev.power_w || 0)}<small> W</small>`;
+  $("util").innerHTML = `${Math.round(ev.gpu_util || 0)}<small> %</small>`;
+  $("gpuTag").textContent = `NVIDIA GB10 Blackwell${ev.temp_c ? `, ${Math.round(ev.temp_c)}°C` : ""}`;
+  chart("powerChart", series.power, "#8b93f8", 60);
+  chart("utilChart", series.util, "#7aa7ff", 100);
+
+  const [tv, tu] = rate(ev.net_tx_bps || 0);
+  $("txRate").innerHTML = `${tv}<small> ${tu}</small>`;
+  chart("netChart", series.tx, "#8b93a3", 50 * 1024);
+  $("netTag").textContent = ev.online ? `uplink: ${(ev.uplinks || []).join(", ") || "none"}` : "no internet";
+  $("tgSub").textContent = ev.online ? "bot, Telegram group" : `offline, ${ev.telegram_pending || 0} queued`;
+  $("tgState").textContent = ev.online
+    ? "Only outbound traffic: short Telegram text messages. No audio, no transcript, no model calls."
+    : `Internet is off. Coaching continues on the box. ${ev.telegram_pending || 0} Telegram message(s) queued until it returns.`;
+
+  if (ev.online !== wasOnline) {
+    log("net", ev.online ? "internet is back · flushing queued Telegram messages"
+                         : "<b>internet lost</b> · speech-to-text and the LLM keep running on this box", true);
+    wasOnline = ev.online;
+  }
+  const pill = $("pill");
+  pill.className = `pill ${ev.online ? "online" : "offline"}`;
+  pill.textContent = ev.online ? "Online" : "Offline";
+
+  const models = ev.models || [];
+  const modelGb = models.reduce((a, m) => a + (m.gb || 0), 0);
+  const other = Math.max(0, ev.mem_used_gb - modelGb), free = Math.max(0, ev.mem_total_gb - ev.mem_used_gb);
+  const colors = ["#8b93f8", "#5a62c9"];
+  $("membar").innerHTML = models.map((m, i) =>
+    `<div style="flex-grow:${m.gb};background:${colors[i % 2]}" title="${m.name}">${m.gb >= 6 ? `${m.name.split(" ").slice(0, 2).join(" ")} ${m.gb} GB` : ""}</div>`).join("") +
+    `<div style="flex-grow:${other};background:#262b37;color:#c3c8d2">${other > 8 ? `system + cache ${other.toFixed(0)} GB` : ""}</div>` +
+    `<div style="flex-grow:${free};background:transparent;color:var(--dim)">${free > 10 ? `free ${free.toFixed(0)} GB` : ""}</div>`;
+  $("memUsed").textContent = `${ev.mem_used_gb} GB in use`;
+  $("memTotal").textContent = `${ev.mem_total_gb} GB total, shared by CPU and GPU`;
+  $("memTag").textContent = `${Math.round((ev.mem_used_gb / ev.mem_total_gb) * 100)}% used`;
+
+  $("models").innerHTML = models.map((m) =>
+    `<div class="model"><div class="role">${m.role}</div><div class="gb">${m.gb} GB</div>
+     <div class="name">${m.name}</div><div class="where">${m.where}</div></div>`).join("");
+  const llm = models[0];
+  if (llm) { llmName = llm.name; llmWhere = llm.where.replace("http://", ""); $("llmTag").textContent = llm.name; $("llmEndpoint").textContent = `LLM endpoint: ${llm.where} (this machine)`; }
+}
+
+const MAX_LINES = 200;
+let heardWords = 0, heardSince = 0, wasOnline = true, llmName = "local LLM", llmWhere = "127.0.0.1:8080";
+
+function esc(x) { return String(x).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]); }
+
+// kind: short tag; html: message (already escaped where needed)
+function log(kind, html, big = false) {
+  const el = $("log");
+  el.querySelector(".cursor")?.classList.remove("cursor");
+  const ln = document.createElement("div");
+  ln.className = "ln" + (big ? " hl" : "");
+  const t = new Date().toLocaleTimeString([], { hour12: false });
+  ln.innerHTML = `<span class="t">${t}</span><span class="k ${kind}">${({nudge: "cue", library: "saved"}[kind] || kind).toUpperCase()}</span><span class="m cursor">${html}</span>`;
+  el.append(ln);
+  while (el.children.length > MAX_LINES) el.firstChild.remove();
+}
+
+function thinking(ev) {
+  flushHeard();
+  log("coach", `check-in at <b>${fmt(ev.elapsed_s)}</b>: plan + clock + ${ev.transcript_chars.toLocaleString()} chars of transcript → ${esc(llmName)} @ ${esc(llmWhere)}`);
+}
+
+function verdict(v) {
+  const toks = v.prompt_tokens ? `${v.prompt_tokens.toLocaleString()} tokens in, ${v.completion_tokens} out, ` : "";
+  log("llm", `replied in <b>${(v.llm_ms / 1000).toFixed(1)} s</b> · ${toks}${v.tokens_per_s ? Math.round(v.tokens_per_s) + " tok/s" : ""} · on GPU`);
+  const st = (v.status || "unknown").replace("_", " ");
+  log("decide", `<span class="s-${esc(v.status)}"><b>${esc(st)}</b></span> · section ${v.section ?? "?"}: ${esc(session?.plan.sections[v.section]?.title || "")} · ${esc(v.reason || "")}`);
+  if (v.replan?.cut?.length) log("decide", `re-plan: skip <b>${esc(v.replan.cut.join(", "))}</b>${v.replan.new_pace ? " · " + esc(v.replan.new_pace) : ""}`);
+  if (v.send) log("nudge", `"${esc(v.send)}"`, true);
+  if (v.send && v.say_next) log("nudge", `try saying: "${esc(v.say_next)}"`);
+  if (v.saved) log("library", `saved "${esc(v.saved.title)}": ${esc(v.saved.explanation)}`);
+}
+
+function flushHeard() {
+  if (heardWords) log("asr", `+${heardWords} words transcribed in ${((performance.now() - heardSince) / 1000).toFixed(0)} s · Nemotron 3.5 ASR on GPU`);
+  heardWords = 0; heardSince = performance.now();
+}
+
+function hear(text) {
+  if (!heardWords) heardSince = performance.now();
+  heardWords += text.trim().split(/\s+/).filter(Boolean).length;
+  hearingText = (hearingText + text).slice(-600);
+  const cut = hearingText.indexOf(" ", 20);
+  const shown = hearingText.length >= 600 && cut > 0 ? hearingText.slice(cut + 1) : hearingText;
+  const recent = Math.max(0, shown.length - text.length);
+  const h = $("hearing");
+  h.innerHTML = "";
+  const old = document.createElement("span"); old.textContent = shown.slice(0, recent);
+  const fresh = document.createElement("span"); fresh.className = "fresh"; fresh.textContent = shown.slice(recent);
+  const wrap = document.createElement("div"); wrap.append(old, fresh); h.append(wrap);
+}
+
+const bubbles = new Map();
+function telegramMsg(ev) {
+  const chat = $("chat");
+  if (chat.querySelector(".idle")) chat.innerHTML = "";
+  let b = bubbles.get(ev.id);
+  if (!b) {
+    b = document.createElement("div");
+    b.className = "bubble";
+    if (session && !/^Super Archilles here|^Done\.|^Keeper\./.test(ev.text)) b.classList.add("nudge");
+    b.append(document.createTextNode(ev.text));
+    const w = document.createElement("span"); w.className = "when"; b.append(w);
+    chat.append(b); bubbles.set(ev.id, b);
+    while (chat.children.length > 14) chat.firstChild.remove();
+  }
+  const t = new Date(ev.ts * 1000).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  b.classList.toggle("queued", ev.status === "queued");
+  const short = esc(ev.text.split("\n")[0].slice(0, 70)) + (ev.text.length > 70 ? "…" : "");
+  log("telegram", ev.status === "queued" ? `offline, queued “${short}”` :
+      ev.status === "delivered_late" ? `back online, delivered queued “${short}” ✓✓` : `sent to group “${short}” ✓✓`);
+  b.querySelector(".when").textContent =
+    ev.status === "queued" ? `${t}  waiting for internet` : ev.status === "delivered_late" ? `${t}  delivered after reconnect ✓✓` : `${t}  ✓✓`;
+}
+
+function handle(ev) {
+  if (ev.type === "stats") stats(ev);
+  else if (ev.type === "telegram") telegramMsg(ev);
+  else if (ev.type === "start") {
+    session = ev; t0 = performance.now() / 1000 - (ev.elapsed || 0); hearingText = "";
+    heardWords = 0; bubbles.clear();
+    $("log").innerHTML = ""; $("chat").innerHTML = "";
+    $("hearing").innerHTML = `<div class="idle">Listening…</div>`;
+    log("session", `started “${esc(ev.name)}” · ${fmt(ev.plan.total_s)} planned · ${ev.plan.sections.length} sections · mic → GB10 → Nemotron ASR`);
+  } else if (ev.type === "text") hear(ev.text);
+  else if (ev.type === "thinking") thinking(ev);
+  else if (ev.type === "verdict") verdict(ev);
+  else if (ev.type === "stop") {
+    flushHeard();
+    session = null;
+    log("session", `ended at <b>${fmt(ev.report.duration_s)}</b> · ${ev.report.nudges.length} cues · writing report`);
+    (ev.report.debrief || "").split("\n").filter(Boolean).forEach((l) => log("debrief", esc(l)));
+  } else if (ev.type === "error") log("error", esc(ev.error));
+  else if (ev.type === "prep") log("prep", esc(ev.text) + (ev.total ? ` · ${ev.ready}/${ev.total} sections ready` : ""));
+  else if (ev.type === "prepare") log("prep", `plan loaded: preparing visuals for ${ev.plan.sections.length} sections`);
+  else if (ev.type === "card") {
+    const what = { candidate: "drafted", proposed: "proposed to speaker", shown: "<b>on the audience screen</b>", dismissed: "dismissed" }[ev.status] || ev.status;
+    log("card", `${esc(ev.source)} ${what}: ${esc(ev.kind)} “${esc(ev.title)}”${ev.status === "proposed" && ev.reason ? " · " + esc(ev.reason) : ""}`);
+  }
+}
+
+setInterval(() => {
+  $("clock").textContent = new Date().toLocaleTimeString();
+  $("session").innerHTML = session
+    ? `${session.name}<br><b>${fmt(performance.now() / 1000 - t0)}</b> / ${fmt(session.plan.total_s)}`
+    : "No session running";
+}, 250);
+
+log("session", "console connected · waiting for a session");
+setInterval(() => { if (session && heardWords && performance.now() - heardSince > 5000) flushHeard(); }, 1000);
+
+(function connect() {
+  const ws = new WebSocket(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/events`);
+  ws.onmessage = (e) => handle(JSON.parse(e.data));
+  ws.onclose = () => setTimeout(connect, 1000);
+})();
+</script>
+</body>
+</html>
